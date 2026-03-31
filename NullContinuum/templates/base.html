@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Null Continuum{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{% url 'dashboard' %}" class="nav-brand">NULL CONTINUUM</a>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <span class="nav-user">{{ user.username }} — {{ user.get_role_display }}</span>
+                <form method="post" action="{% url 'logout' %}" class="nav-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link nav-btn">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-link">Login</a>
+                <a href="{% url 'register' %}" class="nav-link">Registrar</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message message-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>Null Continuum — Gerenciador de Personagens</p>
+    </footer>
+</body>
+</html>

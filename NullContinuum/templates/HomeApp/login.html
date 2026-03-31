@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Login — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1 class="auth-title">Login</h1>
+
+    {% if form.errors %}
+    <div class="form-errors">
+        <p>Senha ou username incorretos</p>
+    </div>
+    {% endif %}
+
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            {{ form.username }}
+        </div>
+        <div class="form-group">
+            <label for="id_password">Senha</label>
+            {{ form.password }}
+        </div>
+        <button type="submit" class="btn btn-primary">Enter</button>
+    </form>
+
+    <p class="auth-footer">Não tem uma conta? <a href="{% url 'register' %}">Registre-se</a></p>
+</div>
+{% endblock %}
