@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Meus Personagens — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Meus Personagens</h1>
+    <a href="{% url 'character_create' %}" class="btn btn-primary btn-inline">+ Novo Personagem</a>
+</div>
+
+{% if characters %}
+<div class="card-grid">
+    {% for c in characters %}
+    <a href="{% url 'character_detail' pk=c.pk %}" class="card card-link">
+        <h3>{{ c.name }}</h3>
+        <p class="card-meta">{{ c.background_display }}</p>
+        <div class="card-stats">
+            <span>Base Rank {{ c.base_rank }}</span>
+            {% if c.nl_rank > 0 %}
+            <span>NL Rank {{ c.nl_rank }} (Cat {{ c.category }})</span>
+            {% endif %}
+        </div>
+        <div class="card-stats">
+            <span>HP {{ c.max_hp }}</span>
+            <span>PD {{ c.passive_defense }}</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>Você ainda não tem personagens.</p>
+    <a href="{% url 'character_create' %}" class="btn btn-primary btn-inline">Criar Primeiro Personagem</a>
+</div>
+{% endif %}
+{% endblock %}

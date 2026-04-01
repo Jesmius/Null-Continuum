@@ -1,0 +1,145 @@
+/* ============================================================
+   COMBAT TRACKER — barra rápida de combate
+   ============================================================ */
+
+.combat-tracker {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.ct-readonly {
+    border-left-color: var(--text-muted);
+}
+
+/* Stats row */
+.ct-stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+.ct-stat {
+    text-align: center;
+    min-width: 60px;
+}
+
+.ct-label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.1rem;
+}
+
+.ct-value {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+}
+
+.ct-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.ct-val-warn {
+    color: var(--warning);
+}
+
+.ct-val-danger {
+    color: var(--danger);
+}
+
+.ct-hp .ct-value {
+    color: var(--success);
+}
+
+.ct-temp .ct-value {
+    color: var(--accent);
+}
+
+.ct-pd .ct-value {
+    color: var(--text-primary);
+}
+
+/* Actions row */
+.ct-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+}
+
+.ct-form {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.ct-form-set {
+    margin-left: auto;
+}
+
+.ct-input {
+    width: 52px;
+    padding: 0.3rem 0.4rem;
+    text-align: center;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.ct-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+.ct-input-sm {
+    width: 48px;
+}
+
+.ct-set-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Heal button color */
+.btn-heal {
+    background-color: var(--success);
+    color: #fff;
+}
+.btn-heal:hover {
+    background-color: #2fc06a;
+    color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .ct-stats {
+        gap: 1rem;
+    }
+    .ct-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ct-form {
+        justify-content: center;
+    }
+    .ct-form-set {
+        margin-left: 0;
+    }
+}

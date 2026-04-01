@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Local apps
     'HomeApp',
+    'CharSheet'
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,377 @@
+/* ============================================================
+   CHARACTER SHEET STYLES
+   Adicionar ao final do style.css existente
+   ============================================================ */
+
+/* --- Page Header com botão --- */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.btn-inline {
+    width: auto;
+    display: inline-block;
+}
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+/* --- Card link --- */
+.card-link {
+    display: block;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+.card-link:hover {
+    color: var(--text-primary);
+}
+
+.card-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-bottom: 0.5rem;
+}
+
+.card-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    margin-top: 0.25rem;
+}
+
+/* --- Empty state --- */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+}
+.empty-state p {
+    margin-bottom: 1rem;
+}
+
+/* --- Sheet (detail view) --- */
+.sheet {
+    max-width: 900px;
+}
+
+.sheet-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.sheet-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+.sheet-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.sheet-section {
+    margin-bottom: 2rem;
+}
+
+/* --- Stat rows --- */
+.stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+.stat-row-small {
+    margin-top: 0.5rem;
+}
+
+.stat-block {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+    min-width: 120px;
+}
+.stat-label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.15rem;
+}
+.stat-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.stat-inline {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+/* --- Attribute grid --- */
+.attr-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+}
+
+.attr-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem;
+    text-align: center;
+}
+.attr-abbr {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+}
+.attr-val {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+.attr-name {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+/* --- Derived stats grid --- */
+.derived-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+.derived-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.75rem;
+}
+.derived-label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.1rem;
+}
+.derived-val {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.derived-val-warn {
+    color: var(--warning);
+}
+.derived-formula {
+    display: block;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+}
+
+/* --- Skills --- */
+.skills-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.skill-cat-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.skill-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.skill-table th {
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.skill-table td {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid rgba(42, 48, 64, 0.4);
+}
+.skill-rank {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-align: center;
+    width: 40px;
+}
+.skill-rank-U { color: var(--text-muted); }
+.skill-rank-P { color: var(--success); }
+.skill-rank-E { color: var(--accent); }
+.skill-rank-M { color: var(--gm-accent); }
+
+.skill-bonus {
+    font-family: var(--font-mono);
+    text-align: center;
+    width: 50px;
+    color: var(--text-secondary);
+}
+
+/* --- Notes --- */
+.notes-block {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* --- Delete confirm --- */
+.delete-confirm {
+    background-color: var(--bg-card);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+}
+.delete-confirm p {
+    margin-bottom: 0.75rem;
+}
+
+/* --- Form page --- */
+.form-page {
+    max-width: 800px;
+}
+
+.form-section {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.form-section legend {
+    padding: 0 0.5rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.form-group-wide {
+    flex: 1 1 100%;
+}
+
+.form-row-attrs {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+}
+.form-group-attr {
+    text-align: center;
+}
+.form-group-attr label {
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+}
+.form-group-attr .form-input {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 0.5rem;
+}
+
+/* Skills form grid */
+.skills-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.5rem 1rem;
+}
+.form-group-skill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0;
+}
+.form-group-skill label {
+    flex: 1;
+    font-size: 0.8rem;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.form-group-skill .skill-select {
+    width: 60px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 0.3rem;
+    font-size: 0.85rem;
+}
+
+/* Form actions */
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+    .attr-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .form-row-attrs {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .form-row {
+        flex-direction: column;
+    }
+    .skills-form-grid {
+        grid-template-columns: 1fr;
+    }
+}

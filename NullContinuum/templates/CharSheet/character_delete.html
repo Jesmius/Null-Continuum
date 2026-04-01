@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Deletar {{ character.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1 class="auth-title">Deletar Personagem</h1>
+    <div class="delete-confirm">
+        <p>Tem certeza que deseja deletar <strong>{{ character.name }}</strong>?</p>
+        <p class="text-muted">Essa ação não pode ser desfeita.</p>
+        <form method="post" class="form-actions">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-inline">Sim, Deletar</button>
+            <a href="{% url 'character_detail' pk=character.pk %}" class="btn btn-secondary btn-inline">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -4,20 +4,24 @@
 
 {% block content %}
 <div class="dashboard">
-    <h1 class="page-title">Bem Vindo, {{ user.username }}</h1>
+    <h1 class="page-title">Bem-vindo, {{ user.username }}</h1>
 
     {% if user.is_gm %}
     <div class="dashboard-section">
         <h2 class="section-title">Painel do Game Master</h2>
         <div class="card-grid">
+            <a href="{% url 'character_list' %}" class="card card-link">
+                <h3>Personagens</h3>
+                <p>Visualizar fichas dos jogadores da sua campanha.</p>
+            </a>
             <div class="card">
                 <h3>Campanhas</h3>
-                <p>Crie e gerencia suas campanhas</p>
+                <p>Criar e gerenciar campanhas, adicionar jogadores.</p>
                 <span class="card-badge">WIP</span>
             </div>
             <div class="card">
-                <h3>Tracker de Iniciativa</h3>
-                <p>Acompanhe a ordem de turnos e o HP das criaturas em combate</p>
+                <h3>Initiative Tracker</h3>
+                <p>Gerenciar ordem de turno e HP em combate.</p>
                 <span class="card-badge">WIP</span>
             </div>
         </div>
@@ -27,11 +31,14 @@
     <div class="dashboard-section">
         <h2 class="section-title">Seus Personagens</h2>
         <div class="card-grid">
-            <div class="card">
-                <h3>Fichas de Personagem</h3>
-                <p>Create and manage your Null Continuum characters.</p>
-                <span class="card-badge">WIP</span>
-            </div>
+            <a href="{% url 'character_list' %}" class="card card-link">
+                <h3>Minhas Fichas</h3>
+                <p>Criar e gerenciar seus personagens do Null Continuum.</p>
+            </a>
+            <a href="{% url 'character_create' %}" class="card card-link">
+                <h3>+ Novo Personagem</h3>
+                <p>Criar uma nova ficha de personagem.</p>
+            </a>
         </div>
     </div>
     {% endif %}

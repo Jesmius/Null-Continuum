@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Editar {{ character.name }}{% else %}Novo Personagem{% endif %} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <h1 class="page-title">{% if is_edit %}Editar: {{ character.name }}{% else %}Novo Personagem{% endif %}</h1>
+
+    {% if id_form.errors or skills_form.errors %}
+    <div class="form-errors">
+        {% for field in id_form %}
+            {% for error in field.errors %}
+            <p>{{ field.label }}: {{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+        {% for error in id_form.non_field_errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
+        {% for field in skills_form %}
+            {% for error in field.errors %}
+            <p>{{ field.label }}: {{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {# --- IDENTIDADE --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Identidade</legend>
+            <div class="form-row">
+                <div class="form-group form-group-wide">
+                    <label for="id_name">Nome do Personagem</label>
+                    {{ id_form.name }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_background">Background</label>
+                    {{ id_form.background }}
+                </div>
+                <div class="form-group">
+                    <label for="id_background_custom">Background (custom)</label>
+                    {{ id_form.background_custom }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_base_rank">Base Rank</label>
+                    {{ id_form.base_rank }}
+                </div>
+                <div class="form-group">
+                    <label for="id_nl_rank">NL Rank</label>
+                    {{ id_form.nl_rank }}
+                </div>
+            </div>
+        </fieldset>
+
+        {# --- ATRIBUTOS --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Atributos</legend>
+            <div class="form-row form-row-attrs">
+                <div class="form-group form-group-attr">
+                    <label for="id_agility">AGI</label>
+                    {{ id_form.agility }}
+                </div>
+                <div class="form-group form-group-attr">
+                    <label for="id_fortitude">FOR</label>
+                    {{ id_form.fortitude }}
+                </div>
+                <div class="form-group form-group-attr">
+                    <label for="id_insight">INS</label>
+                    {{ id_form.insight }}
+                </div>
+                <div class="form-group form-group-attr">
+                    <label for="id_presence">PRE</label>
+                    {{ id_form.presence }}
+                </div>
+                <div class="form-group form-group-attr">
+                    <label for="id_stability">STA</label>
+                    {{ id_form.stability }}
+                </div>
+                <div class="form-group form-group-attr">
+                    <label for="id_intent">INT</label>
+                    {{ id_form.intent }}
+                </div>
+            </div>
+        </fieldset>
+
+        {# --- PERFIL NL --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Perfil Non-Linear</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_continuity_constant">Continuity Constant</label>
+                    {{ id_form.continuity_constant }}
+                </div>
+                <div class="form-group">
+                    <label for="id_abstraction_frame">Abstraction Frame</label>
+                    {{ id_form.abstraction_frame }}
+                </div>
+            </div>
+        </fieldset>
+
+        {# --- DEFESA & CARGA --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Defesa & Carga</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_armor_bonus">Bônus de Armadura</label>
+                    {{ id_form.armor_bonus }}
+                </div>
+                <div class="form-group">
+                    <label for="id_shield_bonus">Bônus de Escudo</label>
+                    {{ id_form.shield_bonus }}
+                </div>
+                <div class="form-group">
+                    <label for="id_current_load">Carga Atual (slots)</label>
+                    {{ id_form.current_load }}
+                </div>
+            </div>
+        </fieldset>
+
+        {# --- SKILLS --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Skills</legend>
+            <p class="form-help">U = Untrained (+0) &nbsp; P = Proficient (+4) &nbsp; E = Expert (+8) &nbsp; M = Master (+12)</p>
+            <div class="skills-form-grid">
+                {% for field in skills_form %}
+                <div class="form-group form-group-skill">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        {# --- NOTAS --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Notas</legend>
+            <div class="form-group">
+                {{ id_form.notes }}
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-inline">
+                {% if is_edit %}Salvar Alterações{% else %}Criar Personagem{% endif %}
+            </button>
+            {% if is_edit %}
+            <a href="{% url 'character_detail' pk=character.pk %}" class="btn btn-secondary btn-inline">Cancelar</a>
+            {% else %}
+            <a href="{% url 'character_list' %}" class="btn btn-secondary btn-inline">Cancelar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

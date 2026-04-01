@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load charsheet_tags %}
+
+{% block title %}{{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="sheet">
+
+    {# --- HEADER --- #}
+    <div class="sheet-header">
+        <h1 class="sheet-name">{{ c.name }}</h1>
+        <div class="sheet-header-actions">
+            {% if c.player == user %}
+            <a href="{% url 'character_edit' pk=c.pk %}" class="btn btn-secondary btn-sm">Editar Ficha</a>
+            <a href="{% url 'character_delete' pk=c.pk %}" class="btn btn-danger btn-sm">Deletar</a>
+            {% endif %}
+            <a href="{% url 'character_list' %}" class="btn btn-secondary btn-sm">Voltar</a>
+        </div>
+    </div>
+
+    {# ============================================================ #}
+    {# --- COMBAT TRACKER (sempre visível, edição rápida) ---       #}
+    {# ============================================================ #}
+    {% if c.player == user %}
+    <section class="combat-tracker">
+        <div class="ct-stats">
+            <div class="ct-stat ct-hp">
+                <span class="ct-label">HP</span>
+                <span class="ct-value {% if c.current_hp <= 0 %}ct-val-danger{% elif c.current_hp <= c.max_hp|divisibleby:2 %}ct-val-warn{% endif %}">{{ c.current_hp }}</span>
+                <span class="ct-sub">/ {{ c.max_hp }}</span>
+            </div>
+            <div class="ct-stat ct-temp">
+                <span class="ct-label">Temp HP</span>
+                <span class="ct-value">{{ c.temp_hp }}</span>
+            </div>
+            <div class="ct-stat ct-pd">
+                <span class="ct-label">PD</span>
+                <span class="ct-value">{{ c.passive_defense }}</span>
+            </div>
+            <div class="ct-stat ct-move">
+                <span class="ct-label">Move</span>
+                <span class="ct-value">3</span>
+            </div>
+            <div class="ct-stat ct-ap">
+                <span class="ct-label">AP</span>
+                <span class="ct-value">3</span>
+            </div>
+        </div>
+
+        <div class="ct-actions">
+            {# Dano #}
+            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="damage">
+                <input type="number" name="amount" min="1" value="1" class="ct-input">
+                <button type="submit" class="btn btn-danger btn-sm">Dano</button>
+            </form>
+
+            {# Cura #}
+            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="heal">
+                <input type="number" name="amount" min="1" value="1" class="ct-input">
+                <button type="submit" class="btn btn-heal btn-sm">Cura</button>
+            </form>
+
+            {# Temp HP #}
+            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="temp_hp">
+                <input type="number" name="amount" min="1" value="1" class="ct-input">
+                <button type="submit" class="btn btn-secondary btn-sm">+Temp</button>
+            </form>
+
+            {# Set direto #}
+            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-set">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="set_hp">
+                <label class="ct-set-label">HP:</label>
+                <input type="number" name="current_hp" value="{{ c.current_hp }}" class="ct-input ct-input-sm">
+                <label class="ct-set-label">Temp:</label>
+                <input type="number" name="temp_hp" value="{{ c.temp_hp }}" min="0" class="ct-input ct-input-sm">
+                <button type="submit" class="btn btn-secondary btn-sm">Set</button>
+            </form>
+
+            {# Full Heal #}
+            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="full_heal">
+                <button type="submit" class="btn btn-secondary btn-sm">Full Heal</button>
+            </form>
+        </div>
+    </section>
+    {% else %}
+    {# GM vendo — read only #}
+    <section class="combat-tracker ct-readonly">
+        <div class="ct-stats">
+            <div class="ct-stat ct-hp">
+                <span class="ct-label">HP</span>
+                <span class="ct-value">{{ c.current_hp }}</span>
+                <span class="ct-sub">/ {{ c.max_hp }}</span>
+            </div>
+            <div class="ct-stat ct-temp">
+                <span class="ct-label">Temp HP</span>
+                <span class="ct-value">{{ c.temp_hp }}</span>
+            </div>
+            <div class="ct-stat ct-pd">
+                <span class="ct-label">PD</span>
+                <span class="ct-value">{{ c.passive_defense }}</span>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# --- IDENTIDADE --- #}
+    <section class="sheet-section">
+        <h2 class="section-title">Identidade</h2>
+        <div class="stat-row">
+            <div class="stat-block">
+                <span class="stat-label">Jogador</span>
+                <span class="stat-value">{{ c.player.username }}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">Background</span>
+                <span class="stat-value">{{ c.background_display }}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">Base Rank</span>
+                <span class="stat-value">{{ c.base_rank }}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">NL Rank</span>
+                <span class="stat-value">{{ c.nl_rank }}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">Category</span>
+                <span class="stat-value">{{ c.category }}</span>
+            </div>
+        </div>
+        {% if c.continuity_constant %}
+        <div class="stat-row">
+            <div class="stat-block">
+                <span class="stat-label">Continuity Constant</span>
+                <span class="stat-value">{{ c.get_continuity_constant_display }}</span>
+            </div>
+            <div class="stat-block">
+                <span class="stat-label">Abstraction Frame</span>
+                <span class="stat-value">{{ c.get_abstraction_frame_display }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    {# --- ATRIBUTOS --- #}
+    <section class="sheet-section">
+        <h2 class="section-title">Atributos</h2>
+        <div class="attr-grid">
+            <div class="attr-card">
+                <span class="attr-abbr">AGI</span>
+                <span class="attr-val">{{ c.agility }}</span>
+                <span class="attr-name">Agility</span>
+            </div>
+            <div class="attr-card">
+                <span class="attr-abbr">FOR</span>
+                <span class="attr-val">{{ c.fortitude }}</span>
+                <span class="attr-name">Fortitude</span>
+            </div>
+            <div class="attr-card">
+                <span class="attr-abbr">INS</span>
+                <span class="attr-val">{{ c.insight }}</span>
+                <span class="attr-name">Insight</span>
+            </div>
+            <div class="attr-card">
+                <span class="attr-abbr">PRE</span>
+                <span class="attr-val">{{ c.presence }}</span>
+                <span class="attr-name">Presence</span>
+            </div>
+            <div class="attr-card">
+                <span class="attr-abbr">STA</span>
+                <span class="attr-val">{{ c.stability }}</span>
+                <span class="attr-name">Stability</span>
+            </div>
+            <div class="attr-card">
+                <span class="attr-abbr">INT</span>
+                <span class="attr-val">{{ c.intent }}</span>
+                <span class="attr-name">Intent</span>
+            </div>
+        </div>
+        <div class="stat-row stat-row-small">
+            <span class="stat-inline">Stat Points usados: {{ c.stat_points_used }} / {{ c.stat_points_used|add:c.stat_points_available }}</span>
+        </div>
+    </section>
+
+    {# --- DERIVED STATS --- #}
+    <section class="sheet-section">
+        <h2 class="section-title">Estatísticas Derivadas</h2>
+        <div class="derived-grid">
+            <div class="derived-card">
+                <span class="derived-label">Max HP</span>
+                <span class="derived-val">{{ c.max_hp }}</span>
+                <span class="derived-formula">(FOR×2)×Rank+15</span>
+            </div>
+            <div class="derived-card">
+                <span class="derived-label">Passive Defense</span>
+                <span class="derived-val">{{ c.passive_defense }}</span>
+                <span class="derived-formula">10+AGI+Armadura+Escudo</span>
+            </div>
+            <div class="derived-card">
+                <span class="derived-label">Carry Capacity</span>
+                <span class="derived-val">{{ c.carry_capacity }}</span>
+                <span class="derived-formula">8+2×FOR</span>
+            </div>
+            <div class="derived-card">
+                <span class="derived-label">Carga Atual</span>
+                <span class="derived-val">{{ c.current_load }}</span>
+                <span class="derived-formula">{{ c.encumbrance }}</span>
+            </div>
+            <div class="derived-card">
+                <span class="derived-label">Base Move</span>
+                <span class="derived-val">3 hex</span>
+            </div>
+            <div class="derived-card">
+                <span class="derived-label">AP por Turno</span>
+                <span class="derived-val">3</span>
+            </div>
+        </div>
+    </section>
+
+    {# --- SKILLS --- #}
+    <section class="sheet-section">
+        <h2 class="section-title">Skills</h2>
+        <div class="skills-columns">
+            {% for cat_name, skills in skills_by_cat.items %}
+            <div class="skill-category">
+                <h3 class="skill-cat-title">{{ cat_name }}</h3>
+                <table class="skill-table">
+                    <thead>
+                        <tr>
+                            <th>Skill</th>
+                            <th>Rank</th>
+                            <th>Bônus</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for skill_name, rank, bonus in skills %}
+                        <tr>
+                            <td>{{ skill_name }}</td>
+                            <td class="skill-rank skill-rank-{{ rank }}">{{ rank }}</td>
+                            <td class="skill-bonus">{{ bonus }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {# --- NOTAS --- #}
+    {% if c.notes %}
+    <section class="sheet-section">
+        <h2 class="section-title">Notas</h2>
+        <div class="notes-block">{{ c.notes|linebreaksbr }}</div>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
