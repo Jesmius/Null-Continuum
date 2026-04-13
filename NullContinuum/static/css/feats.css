@@ -1,0 +1,339 @@
+
+
+/* --- Tabs --- */
+.feat-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.feat-tab {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.feat-tab:hover {
+    color: var(--text-secondary);
+}
+.feat-tab-active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.feat-tab-count {
+    font-size: 0.7rem;
+    background-color: var(--bg-input);
+    color: var(--text-muted);
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+}
+.feat-tab-active .feat-tab-count {
+    background-color: var(--accent-glow);
+    color: var(--accent);
+}
+
+/* --- Feat Section --- */
+.feat-section {
+    margin-bottom: 2.5rem;
+}
+
+/* --- Trees Grid --- */
+.trees-grid {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 2rem 1rem 2rem 1rem;
+    align-items: flex-end;
+}
+
+/* --- Single Tree Column --- */
+.tree-column {
+    min-width: 130px;
+    max-width: 160px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Tree Title com tooltip --- */
+.tree-title-wrap {
+    position: relative;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.tree-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    cursor: default;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.tree-title-tooltip {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    padding: 0.6rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    z-index: 200;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+.tree-title-wrap:hover .tree-title-tooltip {
+    display: block;
+}
+
+/* --- Tree Nodes --- */
+.tree-nodes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tree-node-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* --- Connector --- */
+.tree-connector {
+    width: 2px;
+    height: 20px;
+    background-color: var(--border);
+}
+.connector-owned {
+    background-color: var(--accent);
+}
+
+/* --- Node base --- */
+.tree-node,
+.general-node {
+    position: relative;
+    width: 120px;
+}
+
+.node-btn,
+.node-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 64px;
+    padding: 0.5rem 0.4rem;
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border);
+    background-color: var(--bg-card);
+    cursor: default;
+    text-align: center;
+    transition: border-color 0.2s, background-color 0.2s, opacity 0.2s;
+}
+.node-btn {
+    cursor: pointer;
+    font-family: var(--font-body);
+}
+.node-btn:hover {
+    border-color: var(--accent);
+    background-color: var(--bg-input);
+}
+.node-form {
+    width: 100%;
+}
+.node-code {
+    display: block;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.15rem;
+}
+.node-name {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+/* --- Node States --- */
+
+.node-owned .node-btn,
+.node-owned .node-display {
+    border-color: var(--accent);
+    background-color: rgba(74, 124, 255, 0.12);
+}
+.node-owned .node-code { color: var(--accent); }
+.node-owned .node-name { color: var(--text-primary); }
+
+.node-available .node-btn,
+.node-available .node-display {
+    border-color: var(--text-muted);
+    border-style: dashed;
+    background-color: var(--bg-card);
+}
+.node-available .node-code { color: var(--text-secondary); }
+.node-available .node-name { color: var(--text-secondary); }
+.node-available .node-btn:hover {
+    border-color: var(--success);
+    border-style: solid;
+    background-color: rgba(60, 218, 124, 0.08);
+}
+
+.node-locked .node-btn,
+.node-locked .node-display {
+    opacity: 0.35;
+    border-color: var(--border);
+    background-color: var(--bg-surface);
+}
+.node-locked .node-code { color: var(--text-muted); }
+.node-locked .node-name { color: var(--text-muted); }
+
+/* ============================================================
+   TOOLTIP 
+   ============================================================ */
+
+.node-tooltip {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 12px);
+    transform: translateY(-50%);
+    width: 300px;
+    padding: 0.75rem;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    z-index: 150;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    pointer-events: none;  
+}
+
+.node-tooltip strong {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    font-size: 0.82rem;
+}
+.node-tooltip p {
+    margin-bottom: 0.3rem;
+}
+.tooltip-prereq {
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+.tooltip-status {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--border);
+}
+.tooltip-owned { color: var(--accent); }
+.tooltip-available { color: var(--success); }
+.tooltip-locked { color: var(--text-muted); }
+
+/* Arrow → aponta para a esquerda (para o node) */
+.node-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: var(--border);
+}
+
+/* Show on hover */
+.tree-node:hover > .node-tooltip,
+.general-node:hover > .node-tooltip {
+    display: block;
+}
+
+/* Últimas 3 colunas: tooltip à ESQUERDA */
+.trees-grid .tree-column:nth-last-child(-n+3) .node-tooltip {
+    left: auto;
+    right: calc(100% + 12px);
+}
+.trees-grid .tree-column:nth-last-child(-n+3) .node-tooltip::after {
+    right: auto;
+    left: 100%;
+    border-right-color: transparent;
+    border-left-color: var(--border);
+}
+
+/* --- General Feats Grid --- */
+.generals-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 0;
+}
+
+.general-node {
+    width: 150px;
+}
+
+.general-btn {
+    min-height: 52px;
+}
+
+
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .trees-grid {
+        gap: 1rem;
+        padding: 1.5rem 0.5rem;
+    }
+    .tree-column {
+        min-width: 110px;
+        max-width: 130px;
+    }
+    .node-btn,
+    .node-display {
+        min-height: 56px;
+        padding: 0.4rem 0.3rem;
+    }
+    .node-tooltip {
+        width: 240px;
+    }
+    .generals-grid {
+        gap: 0.5rem;
+    }
+    .general-node {
+        width: 130px;
+    }
+}

@@ -10,6 +10,9 @@
     <div class="sheet-header">
         <h1 class="sheet-name">{{ c.name }}</h1>
         <div class="sheet-header-actions">
+            {% if c.player == user and c.base_rank < 15 %}
+            <a href="{% url 'rank_up' pk=c.pk %}" class="btn btn-rankup btn-sm">⬆ Rank Up</a>
+            {% endif %}
             {% if c.player == user %}
             <a href="{% url 'character_edit' pk=c.pk %}" class="btn btn-secondary btn-sm">Editar Ficha</a>
             <a href="{% url 'character_delete' pk=c.pk %}" class="btn btn-danger btn-sm">Deletar</a>
@@ -256,6 +259,18 @@
         </div>
     </section>
 
+    <section class="sheet-section">
+        <h2 class="section-title">Feats</h2>
+        <div class="feat-links">
+            <a href="{% url 'character_feats' pk=c.pk tab='combat' %}" class="btn btn-secondary btn-inline">
+                Combat Feats
+            </a>
+            <a href="{% url 'character_feats' pk=c.pk tab='operations' %}" class="btn btn-secondary btn-inline">
+                Operations Feats
+            </a>
+        </div>
+    </section>
+    
     {# --- NOTAS --- #}
     {% if c.notes %}
     <section class="sheet-section">

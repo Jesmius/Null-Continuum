@@ -1,0 +1,121 @@
+
+
+{# --- SKILL TREES --- #}
+<section class="feat-section">
+    <h2 class="section-title">
+        {% if tab == 'combat' %}Combat Feat Trees{% else %}Operations Feat Trees{% endif %}
+        {% if editable %}<span class="section-badge">Clique para selecionar</span>{% endif %}
+    </h2>
+
+    <div class="trees-grid">
+        {% for tree in trees %}
+        <div class="tree-column">
+            <div class="tree-title-wrap">
+                <h3 class="tree-title">{{ tree.name }}</h3>
+                {% if tree.description %}
+                <div class="tree-title-tooltip">{{ tree.description }}</div>
+                {% endif %}
+            </div>
+            <div class="tree-nodes">
+                {% for entry in tree.feats %}
+                <div class="tree-node-wrapper">
+                    {% if not forloop.first %}
+                    <div class="tree-connector {% if entry.owned %}connector-owned{% endif %}"></div>
+                    {% endif %}
+
+                    <div class="tree-node
+                        {% if entry.owned %}node-owned
+                        {% elif entry.available %}node-available
+                        {% else %}node-locked{% endif %}">
+
+                        {% if editable and entry.owned or editable and entry.available %}
+                        {# EDITABLE MODE: toggle via POST #}
+                        <form method="post" class="node-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="feat_toggle" value="{{ entry.feat.id }}">
+                            <button type="submit" class="node-btn">
+                                <span class="node-code">{{ entry.feat.code }}</span>
+                                <span class="node-name">{{ entry.feat.name }}</span>
+                            </button>
+                        </form>
+                        {% else %}
+                        {# READ-ONLY MODE #}
+                        <div class="node-display">
+                            <span class="node-code">{{ entry.feat.code }}</span>
+                            <span class="node-name">{{ entry.feat.name }}</span>
+                        </div>
+                        {% endif %}
+
+                        <div class="node-tooltip">
+                            <strong>[{{ entry.feat.code }}] {{ entry.feat.name }}</strong>
+                            <p>{{ entry.feat.description }}</p>
+                            {% if entry.feat.prerequisite %}
+                            <p class="tooltip-prereq">Requer: {{ entry.feat.prerequisite.name }}</p>
+                            {% endif %}
+                            {% if entry.owned %}
+                            <p class="tooltip-status tooltip-owned">
+                                {% if editable %}Selecionada (clique para remover){% else %}Adquirida{% endif %}
+                            </p>
+                            {% elif entry.available %}
+                            <p class="tooltip-status tooltip-available">
+                                {% if editable %}Disponível (clique para selecionar){% else %}Disponível{% endif %}
+                            </p>
+                            {% else %}
+                            <p class="tooltip-status tooltip-locked">Bloqueada</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+{# --- GENERAL FEATS --- #}
+{% if generals %}
+<section class="feat-section">
+    <h2 class="section-title">
+        {% if tab == 'combat' %}General Combat Feats{% else %}General Operations Feats{% endif %}
+    </h2>
+
+    <div class="generals-grid">
+        {% for entry in generals %}
+        <div class="general-node
+            {% if entry.owned %}node-owned
+            {% elif entry.available %}node-available
+            {% else %}node-locked{% endif %}">
+
+            {% if editable and entry.owned or editable and entry.available %}
+            <form method="post" class="node-form">
+                {% csrf_token %}
+                <input type="hidden" name="feat_toggle" value="{{ entry.feat.id }}">
+                <button type="submit" class="node-btn general-btn">
+                    <span class="node-code">{{ entry.feat.code }}</span>
+                    <span class="node-name">{{ entry.feat.name }}</span>
+                </button>
+            </form>
+            {% else %}
+            <div class="node-display general-btn">
+                <span class="node-code">{{ entry.feat.code }}</span>
+                <span class="node-name">{{ entry.feat.name }}</span>
+            </div>
+            {% endif %}
+
+            <div class="node-tooltip">
+                <strong>[{{ entry.feat.code }}] {{ entry.feat.name }}</strong>
+                <p>{{ entry.feat.description }}</p>
+                {% if entry.owned %}
+                <p class="tooltip-status tooltip-owned">
+                    {% if editable %}Selecionada{% else %}Adquirida{% endif %}
+                </p>
+                {% else %}
+                <p class="tooltip-status tooltip-available">Disponível</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

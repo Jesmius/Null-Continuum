@@ -284,3 +284,5 @@ class Character(models.Model):
                 (display_name, rank, bonus_display)
             )
         return result
+    
+    from .feat_models import FeatDefinition, CharacterFeat

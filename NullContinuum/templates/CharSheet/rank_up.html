@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Rank Up — {{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="sheet">
+
+    <div class="sheet-header">
+        <h1 class="sheet-name">Rank Up: {{ c.name }}</h1>
+        <a href="{% url 'character_detail' pk=c.pk %}" class="btn btn-secondary btn-sm">Cancelar</a>
+    </div>
+
+    {% if errors %}
+    <div class="form-errors">
+        {% for e in errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    {# --- RESUMO --- #}
+    <div class="rankup-summary">
+        <div class="rankup-arrow">
+            <span class="rankup-from">Rank {{ c.base_rank }}</span>
+            <span class="rankup-icon">→</span>
+            <span class="rankup-to">Rank {{ new_rank }}</span>
+        </div>
+        <div class="rankup-rewards">
+            <div class="reward-item">
+                <span class="reward-label">Max HP</span>
+                <span class="reward-value">{{ c.max_hp }} → {{ new_max_hp }} (+{{ hp_gain }})</span>
+            </div>
+            <div class="reward-item">
+                <span class="reward-label">Skill Upgrades</span>
+                <span class="reward-value reward-highlight">{{ rewards.skill_upgrades }}</span>
+            </div>
+            <div class="reward-item">
+                <span class="reward-label">Combat Feats</span>
+                <span class="reward-value reward-highlight">{{ rewards.combat_feats }}</span>
+            </div>
+            <div class="reward-item">
+                <span class="reward-label">Ops Feats</span>
+                <span class="reward-value reward-highlight">{{ rewards.ops_feats }}</span>
+            </div>
+            {% if rewards.notes %}
+            <div class="reward-item reward-note">
+                <span class="reward-value">{{ rewards.notes }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+   {# --- TUDO DENTRO DE UM FORM SÓ --- #}
+    <form method="post">
+        {% csrf_token %}
+
+        {# --- SKILL UPGRADES --- #}
+        {% if rewards.skill_upgrades > 0 %}
+        <fieldset class="form-section">
+            <legend class="section-title">
+                Escolha {{ rewards.skill_upgrades }} Skill{{ rewards.skill_upgrades|pluralize }} para melhorar
+            </legend>
+
+            {% for cat_name, skills in skills_by_cat.items %}
+            <div class="rankup-skill-cat">
+                <h3 class="skill-cat-title">{{ cat_name }}</h3>
+                <div class="rankup-skill-grid">
+                    {% for skill in skills %}
+                    <label class="rankup-skill-option">
+                        <input type="checkbox" name="skill_upgrades" value="{{ skill.field }}">
+                        <span class="rankup-skill-name">{{ skill.name }}</span>
+                        <span class="rankup-skill-rank">{{ skill.current }} → {{ skill.next }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </fieldset>
+        {% endif %}
+
+        {# --- CONFIRMAR --- #}
+        <div class="form-actions" style="margin-top: 1rem;">
+            <input type="hidden" name="finalize" value="1">
+            <button type="submit" class="btn btn-primary btn-inline">
+                Confirmar Rank Up para Rank {{ new_rank }}
+            </button>
+        </div>
+    </form>
+
+    {# --- FEAT TREES (forms separados, toggle individual) --- #}
+    <h2 class="section-title" style="margin-top: 2rem;">Combat Feats (clique para adicionar)</h2>
+    {% include 'CharSheet/_feat_trees_partial.html' with trees=combat_trees generals=combat_generals editable=True tab='combat' %}
+
+    <h2 class="section-title" style="margin-top: 2rem;">Operations Feats (clique para adicionar)</h2>
+    {% include 'CharSheet/_feat_trees_partial.html' with trees=ops_trees generals=ops_generals editable=True tab='operations' %}
+
+</div>
+{% endblock %}

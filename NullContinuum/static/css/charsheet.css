@@ -1,6 +1,6 @@
 /* ============================================================
    CHARACTER SHEET STYLES
-   Adicionar ao final do style.css existente
+   
    ============================================================ */
 
 /* --- Page Header com botão --- */
@@ -251,6 +251,12 @@
     color: var(--text-secondary);
 }
 
+.feat-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
 /* --- Notes --- */
 .notes-block {
     background-color: var(--bg-card);
@@ -358,6 +364,16 @@
     gap: 0.75rem;
     margin-top: 1rem;
     flex-wrap: wrap;
+}
+
+.btn-rankup {
+    background-color: var(--success);
+    color: #fff;
+    font-weight: 700;
+}
+.btn-rankup:hover {
+    background-color: #2fc06a;
+    color: #fff;
 }
 
 /* --- Responsive --- */

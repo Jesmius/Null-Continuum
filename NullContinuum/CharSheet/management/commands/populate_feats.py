@@ -1,0 +1,313 @@
+"""
+Popula o banco com todas as Feats do Null Continuum v0.7.
+Descrições extraídas diretamente do livro de regras.
+
+ESTE É O ARQUIVO QUE VOCÊ EDITA para mudar descrições de feats.
+Após editar, rode: python manage.py populate_feats
+
+Uso: python manage.py populate_feats
+"""
+from django.core.management.base import BaseCommand
+from CharSheet.feat_models import FeatDefinition
+
+# ─────────────────────────────────────────────
+#  COMBAT FEATS
+#
+#  Cada tree: (tree_name, tree_code, tree_description, [(code, name, tier, description), ...])
+#  tier=0 → General (sem tree)
+#  tier=1,2,3 → posição na árvore (1=base, 2=meio, 3=topo)
+# ─────────────────────────────────────────────
+
+COMBAT_TREES = [
+    ('General', 'GC',
+     'Feats gerais de combate que não pertencem a nenhuma árvore específica. Podem ser escolhidas livremente.',
+     [
+        ('GC1', 'Toughness', 0,
+         'Your Max HP increases by FOR × Base Rank. This feat can be taken twice — the second time also increases Max HP by FOR × Base Rank, using your current values at the time of the second selection.'),
+        ('GC2', 'Second Wind', 0,
+         'The first time you drop to 50% HP or below in a combat, you immediately regain FOR + STA HP. No AP cost, no action required — it triggers automatically. Once per combat.'),
+        ('GC3', 'Combat Reflexes', 0,
+         '+1 die on Initiative checks. When you are surprised, you may still act on the surprise round at −1 die on all checks, instead of being locked out entirely.'),
+        ('GC4', 'Grappling', 0,
+         'When you successfully Grapple a target, you may immediately apply one of the following as part of the same action at no additional AP: move the target 1 hex with you, impose −1 die on their next attack, or deal your unarmed strike damage. Additionally, escaping your Grapple costs the target 1 additional AP.'),
+        ('GC5', 'Unarmed Combat', 0,
+         'Your unarmed strikes deal 1d6 + FOR (bludgeoning) instead of standard unarmed damage. You are always considered armed for the purposes of Parry. When you successfully Grapple a target, your unarmed strikes against them deal +1 die step.'),
+        ('GC6', 'Dirty Fighter', 0,
+         'When you attack a target using an improvised weapon, environmental hazard, or unconventional method (GM approves the fiction), the attack deals +1 die step and the target must make a FOR Save vs DC 10 + your AGI or FOR or gain one Tier-1 Condition of your choice: Dazed, Blinded for 1 round, Prone, or Slowed 1.'),
+        ('GC7', 'Shotgun Specialist', 0,
+         'When you fire a weapon in Spread mode, the cone length increases by 1 hex. Targets that fail their Save against a Spread attack also suffer −1 die on their next attack roll from the impact.'),
+        ('GC8', 'Steady Hands', 0,
+         'You do not suffer attack penalties for moving and firing a ranged weapon in the same turn. When firing at a target beyond your weapon\'s effective range but within max, you do not suffer the −1 die penalty if you did not move this turn.'),
+        ('GC9', 'Threat Assessment', 0,
+         'At the start of combat before initiative is rolled, identify one creature you can see. The GM tells you one of the following (your choice): their approximate HP tier (Healthy / Bloodied / Critical), one active trait or special ability, or their Disposition toward the group. Additionally, when you target a creature you have already hit at least once this combat, your attack rolls gain +1 flat to the result.'),
+        ('GC10', 'Battlefield Medic', 0,
+         'Using any medical consumable on an adjacent ally costs 0 AP instead of 1 AP. You may attempt to Stabilise a Dying creature as a 1 AP action rather than 2 AP.'),
+    ]),
+    ('Dodge Mastery', 'D',
+     'Evasion and movement as defense. Dodge works against melee attacks, thrown weapons, and ranged attacks at ≤ 2 hexes. Base characters cannot dodge firearms at range.',
+     [
+        ('D1', 'Evasive', 1,
+         'When you successfully Dodge, you always move 1 hex as part of the dodge. The moved hex does not cost AP and does not count toward your normal movement.'),
+        ('D2', 'Lightning Reflexes', 2,
+         'You may choose to Dodge after the GM announces an attack has hit you, rather than declaring before the roll. Dodging this way is made at −1 die.'),
+        ('D3', 'Ghost', 3,
+         'After a successful Dodge, you may make a free Stealth check contested by the dodged attacker\'s Perception (0 AP). On success, you become Hidden from that specific attacker until you attack, use an NL ability, or move into their direct line of sight in open terrain.'),
+    ]),
+    ('Parry Mastery', 'P',
+     'Weapon deflection and punishing commitment. Parry works against melee attacks and thrown weapons only — not firearms of any kind at Base Rank.',
+     [
+        ('P1', 'Tight Guard', 1,
+         'On a successful Parry, the attacker suffers −1 die on their next attack before your next turn. Additionally, you may Parry while wielding a Heavy melee weapon, removing the normal restriction.'),
+        ('P2', 'Read the Commitment', 2,
+         'After any successful Parry, your next attack against the attacker deals +1 die step of damage.'),
+        ('P3', 'Counter', 3,
+         'After a successful Parry, you may make one free melee attack against the attacker — costs 0 additional AP. This attack does count for multi-attack penalties.'),
+    ]),
+    ('Block Mastery', 'BL',
+     'Absorption and protection. Block works against melee attacks and, with these feats, ranged attacks at any distance.',
+     [
+        ('BL1', 'Altruism', 1,
+         'You may use your Block as a Reaction on behalf of an adjacent ally — interposing yourself, normal Block calculation applies, however any exceeding damage still damages them.'),
+        ('BL2', 'Fortified', 2,
+         'Your Block calculation doubles on a successful Block: damage is reduced by 2 × (FOR + gear bonus). On a failed Block, you still reduce by the normal FOR + gear bonus. You are significantly harder to damage when you set your stance.'),
+        ('BL3', 'Iron Wall', 3,
+         'When Blocking for an ally, you take the exceeding damage for them. On top of that, when you successfully Block a melee attack, the attacker takes FOR + gear bonus damage from the impact.'),
+    ]),
+    ('Lethality', 'PR',
+     'Setup, stealth, and one decisive hit. Works with any weapon. Stealth attack bonus: +1 damage die of the weapon\'s own type.',
+     [
+        ('PR1', 'Patient Hunter', 1,
+         'When moving on your turn, you may move through non-concealed terrain as if it were concealed for Stealth purposes. This applies only to your movement — you cannot hide in the open while stationary.'),
+        ('PR2', 'Called Shot', 2,
+         'Before rolling an attack, declare a specific target location. Take −1 die on the attack roll. On a hit, the target makes a Reflexes Save vs DC 10 + your AGI — on failure, apply one defined effect in addition to normal damage: arm (target drops one held item), leg (Slowed 1 until end of their next turn), head (Dazed until end of their next turn), weapon (weapon gains Damaged — −1 to attack rolls until repaired, stackable once).'),
+        ('PR3', 'Killing Blow', 3,
+         'When you attack a target while Hidden or the enemy is Surprised, your attack deals +1 damage die of the weapon\'s type, on a crit the bonus becomes +2 damage dice. If you also used Called Shot on this attack, the Called Shot effect is applied without the −1 die penalty.'),
+    ]),
+    ('Duelist', 'DU',
+     'Direct single-target melee excellence. Rewards sustained engagement with one enemy and exploiting their mistakes. Light or Medium melee weapons.',
+     [
+        ('DU1', 'Measure the Distance', 1,
+         'When you and one target are the only creatures in melee with each other (no other creatures adjacent to either of you), your melee attacks against that target gain +2 flat to the attack result. This bonus disappears immediately if a third creature enters the space.'),
+        ('DU2', 'Find the Gap', 2,
+         'When a target misses you with a melee attack, your next melee attack against them before the end of your next turn is a guaranteed hit if it beats their base PD — it bypasses Active Defenses.'),
+        ('DU3', 'Disarming Strike', 3,
+         'When you make a melee attack, you may declare a Disarming Strike before rolling. Take −1 die on the attack roll. On a hit, the target makes a FOR or AGI Save vs your attack result — on failure, they drop one held item into an adjacent hex.'),
+    ]),
+    ('Destroyer', 'DE',
+     'Melee AoE, clearing space, threatening multiple enemies at once. Any melee weapon.',
+     [
+        ('DE1', 'Relentless', 1,
+         'Your melee attacks deal +1 flat damage. Additionally, you ignore movement penalties from Difficult Terrain — you plow through obstacles rather than being slowed by them.'),
+        ('DE2', 'Overcommit', 2,
+         'When you make a melee attack, you may declare Overcommit before rolling. On a hit, the attack deals +1 die step of damage. Until the start of your next turn, creatures within your melee reach have +1 die on attack rolls against you.'),
+        ('DE3', 'Wide Swing', 3,
+         'Requires Overcommit (DE2). When you declare Overcommit, you may also declare Wide Swing — the attack hits all creatures in a 180-degree arc (3 adjacent hexes of your choice) rather than one target. Roll one attack. Every creature in the arc may use Active Defenses normally. Those who do not defend, or whose defense fails, take full damage including the Overcommit die step bonus. The Overcommit penalty still applies.'),
+    ]),
+    ('Deadeye', 'DA',
+     'Deliberate, accurate ranged fire. Single-action weapons — any ranged weapon used in Single Shot mode. Rewards patience and positioning over volume.',
+     [
+        ('DA1', 'Steady Aim', 1,
+         'When you use the Aim action before attacking and do not move this turn, the Aim bonus increases to +2 dice instead of +1. Additionally, Aim persists until you move — you may hold the Aim across your turn rather than losing it if you haven\'t fired yet.'),
+        ('DA2', 'Opening Shot', 2,
+         'When combat begins and before initiative is rolled, you may make one free Single Shot attack against any creature you can see. This happens before anyone acts. After the shot resolves, roll initiative normally. You fire the first shot.'),
+        ('DA3', 'Trigger Discipline', 3,
+         'If you end your turn with an active Aim (you used Aim this turn and have not yet fired), you may make one Reaction shot against any enemy that moves before your next turn — costs 0 AP and deals +1 damage die of the weapon\'s type. One Reaction per round maximum, since you only have one active Aim at a time.'),
+    ]),
+    ('Sustained Fire', 'SF',
+     'Volume fire, suppression, and overwhelming a single target. Automatic and high-capacity weapons. Full Auto attacks.',
+     [
+        ('SF1', 'Close Quarters Automatic', 1,
+         'Your Full Auto attacks no longer suffer the −1 die penalty for firing while adjacent to an enemy.'),
+        ('SF2', 'Efficient Cyclic', 2,
+         'Full Auto attacks cost 2 AP instead of 3 AP.'),
+        ('SF3', 'Concentrated Fire', 3,
+         'When you Full Auto, you may target a single creature instead. Roll your weapon\'s damage three times and add the two highest results — the sustained pressure of concentrated fire finds every gap in their defense. Every creature adjacent to the primary target takes damage equal to the lowest damage roll from the spray.'),
+    ]),
+    ('Tactician', 'TA',
+     'Inspiring allies and multiplying team output through coordination and leadership.',
+     [
+        ('TA1', 'Inspire', 1,
+         'Spend 1 AP. Give one ally who can hear you an Inspiration Die (d6). They may add it to any single roll before your next turn — attack, defense, skill check, or Save. Once used the die is gone. If unused it disappears at your next turn.'),
+        ('TA2', 'Bolster', 2,
+         'Your Inspiration Die improves to a d8. The inspired ally may now add it to a damage roll rather than only a check.'),
+        ('TA3', 'Rally', 3,
+         'Your Inspiration Die improves to a d10. When you use Inspire, you may inspire two allies simultaneously with the single 1 AP action — each receives their own d10 Inspiration Die.'),
+    ]),
+    ('Combat Medic', 'MC',
+     'Field triage and keeping allies functional under fire. Rewards Medicine skill investment.',
+     [
+        ('MC1', 'Field Triage', 1,
+         'When you use a Medkit on an adjacent ally, they also remove one Tier-1 Condition of your choice: Bleeding 1, Burning 1, Dazed, or Slowed 1. Additionally, Trauma Kits used by you restore 1d6 + your Medicine bonus HP in addition to their normal stabilisation effect.'),
+        ('MC2', 'Keep Them Up', 2,
+         'When an adjacent ally drops to 0 HP, you may attempt to Stabilise them as a Reaction (1 AP) — Medicine check DC 12. On success, they are Stable at 1 HP and do not fall Prone. On failure, they fall Dying as normal. This does not use a consumable.'),
+        ('MC3', 'Combat Surgeon', 3,
+         'Spend 2 AP and touch an adjacent creature at 50% HP or below. Without any consumable, restore 1d6 + your Medicine bonus HP and remove one Tier-1 Condition through improvised field treatment — pressure, positioning, rapid wound management.'),
+    ]),
+    ('Companion Handler', 'CO',
+     'Using your companion as an active combat asset. Requires an NL or trained Companion. Companions act only through Commands or free moves.',
+     [
+        ('CO1', 'Combat Trained', 1,
+         'When you issue a Command to your companion, it may perform one attack and one Move as part of that single Command.'),
+        ('CO2', 'Pack Tactics', 2,
+         'When your companion hits a target, that target has −1 die on their next attack against you specifically until your next turn.'),
+        ('CO3', 'Protective Instinct', 3,
+         'When you are hit by a melee attack, your companion may make one basic attack against that attacker as a Reaction — costs you 0 AP. Additionally, your companion\'s basic attack damage die increases one step permanently.'),
+    ]),
+]
+
+# ─────────────────────────────────────────────
+#  OPERATIONS FEATS
+# ─────────────────────────────────────────────
+
+OPERATIONS_TREES = [
+    ('General', 'GO',
+     'Feats gerais de operações que não pertencem a nenhuma árvore específica. Podem ser escolhidas livremente.',
+     [
+        ('GO1', 'Measured Appeal', 0,
+         '+1 die on Persuasion checks. When you succeed on a Persuasion check, choose one of two outcomes: the NPC complies and their Disposition shifts +1 (you pressed the moment), or the NPC complies and their Disposition is unchanged (you preserved the goodwill). You decide whether to spend the capital or hold it.'),
+        ('GO2', 'Calculated Deception', 0,
+         '+1 die on Deception checks. When you are caught in a lie, you may immediately attempt a second PRE + Deception check (no penalty) to reframe the revelation — on success, what was exposed becomes a partial truth or a misunderstanding rather than a confirmed lie. On failure, the original exposure stands.'),
+        ('GO3', 'Controlled Pressure', 0,
+         '+1 die on Intimidation checks. Before rolling, you may choose to double this bonus — if you do, the target\'s Disposition toward you decreases by 1 regardless of whether the check succeeds or fails. You extracted what you needed, but they remember exactly how you did it.'),
+        ('GO4', 'Deep Research', 0,
+         'During downtime, when researching a specific topic, the GM provides twice the normal detail from a successful check — one extra connected piece of information beyond what the roll would ordinarily yield. This represents systematic, methodical investigation rather than a single query.'),
+        ('GO5', 'Social Networking', 0,
+         'Each positive point of Disposition an NPC or faction has toward you represents a level of favour they are willing to extend. You may call in a favour appropriate to their current Disposition — the higher the Disposition, the more significant what they will do. Calling in the favour reduces their Disposition by 1. You spent capital, not the relationship.'),
+        ('GO6', 'Animal Empathy', 0,
+         'You can attempt to calm, approach, or read the intent of a wild or unfamiliar animal without a companion present. Roll PRE + Animal Handling vs a DC set by the animal\'s aggression and temperament. On success, the animal is non-hostile for the scene unless directly threatened or provoked. On a strong success (beat DC by 5+), it will also accept your direction for a simple task.'),
+        ('GO7', 'Tech Interface', 0,
+         '+1 die on Technology checks. Given time and access, you can attempt to extract information from damaged, locked, or unfamiliar technology — a successful INS + Technology check against a GM-set DC retrieves data, bypasses a lock, or identifies a device\'s function without documentation. Additionally, by examining a system or interface, you can estimate how long it would take to crack with proper tools versus improvised tools, and whether it exceeds your current capability.'),
+        ('GO8', 'Lie Detector', 0,
+         '+1 die on INS + Intuition checks made to detect deception. When an NPC lies to you and you succeed on a contested Intuition check, the GM confirms the statement was false — not what the truth is, just that something was wrong. Once per scene, you may ask the GM whether a specific statement an NPC made this scene was entirely truthful.'),
+        ('GO9', 'Null Sense', 0,
+         'Through accumulated exposure and attentiveness rather than any NL ability, you have learned to notice when something is anomalously wrong. When you enter a space with significant NL activity, or encounter a creature, object, or phenomenon with an active Imprint, the GM gives you a vague signal without prompting. On a successful INS + Survival or INS + Null Theory check (your choice), you can narrow down which Continuity Constant is being violated.'),
+        ('GO10', 'Trader', 0,
+         'When buying, selling, or bartering, you negotiate better terms than face value. On a successful PRE + Persuasion or PRE + Intuition check (your choice based on approach), you either pay 20% less for a purchase, receive 20% more value when selling, or extract one additional concession from a trade already agreed upon. Additionally, you can assess the rough market value of an item by examining it — no check required for mundane goods; INS + History for rare or unusual items.'),
+    ]),
+    ('The Face', 'FA',
+     'Reading people, building meaningful relationships, and understanding what matters to those around you. Rewards patience and attention.',
+     [
+        ('FA1', 'Read the Room', 1,
+         'When you engage in a significant social interaction, you may roll PRE + Intuition contested by the NPC\'s PRE. On success, the GM tells you one of the following (your choice): the NPC\'s general Disposition band toward the group (hostile / guarded / neutral / warm / trusting — not the exact number), or one thing they are visibly uncomfortable or evasive about in this specific conversation.'),
+        ('FA2', 'Find the Angle', 2,
+         'When you appeal to a confirmed Conviction during a social check, you gain +1 die stacking with the base system\'s Conviction bonus (total +2 dice). Additionally, after a failed social check, you may spend one minute observing the NPC\'s reaction and ask the GM one specific yes/no question about why it failed.'),
+        ('FA3', 'Long Game', 3,
+         'Between sessions or during downtime, you may actively cultivate a relationship with an NPC whose Disposition toward you is +2 or higher. The GM reveals one of their Convictions directly. Additionally, whenever you do something that aligns with a known Conviction of this NPC, the Disposition shift is +1 higher than it would otherwise be.'),
+    ]),
+    ('Animal Handler', 'AH',
+     'Companion utility outside combat — scouting, reading environments, and tracking across significant distances. Requires a trained or NL companion.',
+     [
+        ('AH1', 'Trained Eyes', 1,
+         'Your companion gains +1 die on Perception checks when acting on your behalf. When you Command your companion to Scout an area you cannot safely enter, it returns with one piece of environmental information: a rough headcount of creatures present, the presence of a significant hazard, or whether a specific thing you described is there.'),
+        ('AH2', 'Working Bond', 2,
+         'When your companion is present during a social interaction, its presence can shift the dynamic. Calm, well-behaved animals make some NPCs more at ease — the GM may grant +1 die on relevant social checks. Conversely, an imposing or unsettling companion may impose −1 die. Additionally, you can attempt a PRE + Animal Handling check to read the emotional state of any animal you can observe.'),
+        ('AH3', 'Follow the Trail', 3,
+         'You can track a target across significant distances using your companion as the primary tracker. Roll INS or PRE + Animal Handling. On success, you can follow a trail up to INS × 24 hours old. On a strong success (beat DC by 5+), you also learn one piece of general information about the target.'),
+    ]),
+    ('Navigator', 'NV',
+     'Null traversal, resource management, and keeping the group alive during journeys. Reduces the cost of being in Null.',
+     [
+        ('NV1', 'Null Footing', 1,
+         '+1 die on Null Navigation checks. During any Journey, you ignore the first level of Fatigue accumulated from travel — the baseline cost of moving through Null does not touch you the way it touches others.'),
+        ('NV2', 'Live off the Land', 2,
+         'Once per day of travel, you may attempt to forage food and water from the environment — roll INS + Survival vs a DC set by the region\'s density and hostility. On success, you produce rations equal to your INS. Additionally, when a Journey Event would reduce the party\'s ration supply, you may make a Null Navigation or Survival check to reduce the loss by half.'),
+        ('NV3', 'Safe Passage', 3,
+         'At the end of a Journey, the Toll the GM assesses for the entire party is one tier lower than it would otherwise be — Serious becomes Meaningful, Meaningful becomes Minor, and Minor is waived entirely. Additionally, when you plan a Journey in advance, the journey takes 1 fewer day than the GM\'s private estimate.'),
+    ]),
+    ('Sleight of Hand', 'SH',
+     'Concealment, theft, misdirection, and working locks. Solving problems by making things disappear or appear before anyone notices.',
+     [
+        ('SH1', 'Quick Hands', 1,
+         '+1 die on Sleight of Hand checks. When you fail a Sleight of Hand check, you may immediately make a second check — AGI + Stealth or PRE + Deception (your choice) — to avoid being identified as the one responsible. On success, the failure is noticed but not traced to you.'),
+        ('SH2', 'Locksmith', 2,
+         'You can attempt to pick locks using improvised tools (hairpin, wire, broken blade) at no additional penalty beyond the base DC. With proper lockpicking tools, you gain +2 on the check. Additionally, by examining a lock without attempting to pick it, you can assess its approximate difficulty.'),
+        ('SH3', 'Vanishing Act', 3,
+         'Items you conceal on your person cannot be found by casual inspection, pat-downs, or visual searches. Only a deliberate and thorough search can uncover them. Additionally, you can lift a specific held or worn item from a distracted or unaware target without first making a Stealth check. Roll AGI + Sleight of Hand vs DC 10 + target\'s INS.'),
+    ]),
+    ('Field Medic', 'FM',
+     'Treating injuries outside of combat, improving rest recovery, and providing care that the standard rules cannot.',
+     [
+        ('FM1', 'Triage', 1,
+         'During a Short Rest, you may treat one adjacent creature. Remove one Tier-1 Condition from them and increase the HP they recover from the Short Rest by their FOR + your Medicine bonus. You do this with what you have — no consumable required.'),
+        ('FM2', 'Sustained Care', 2,
+         'During a Long Rest, choose a number of allies up to your INS. Those allies recover 75% of their Max HP instead of 50%, and their Fatigue reduces by 2 levels instead of 1. Additionally, you may attempt to treat one of these allies who has a Critical Injury — roll INS + Medicine vs DC 18.'),
+        ('FM3', 'Deep Recovery', 3,
+         'During Extended Downtime, your care produces upgrades over the standard rules. Allies under your care heal to full HP after 2 days. Critical Injuries you treat heal in half the normal time. Once per downtime period, one ally may attempt to recover from a Maimed Injury under your care — INS + Medicine vs DC 20 for partial restoration, DC 25 for full recovery.'),
+    ]),
+    ('Engineer', 'EN',
+     'Field repairs, consumable crafting, and equipment modification. Makes your gear better and keeps everyone else\'s gear running.',
+     [
+        ('EN1', 'Field Repair', 1,
+         '+1 die on Engineering checks. You can perform emergency repairs on a vehicle, weapon, or piece of equipment in the field. The repair lasts until the item takes significant damage again. Requires a successful FOR or INS + Engineering check and at least 10 minutes of work.'),
+        ('EN2', 'Workshop Anywhere', 2,
+         'You can build basic consumables from available materials during downtime or between scenes — roll INS + Engineering vs a DC set by what you are producing. Additionally, you can modify existing equipment — adding a Base Trait to a weapon or armor, improving an upgrade already installed, or removing a penalty trait.'),
+        ('EN3', 'Master Craft', 3,
+         'Your field repairs now last until the vehicle or item takes serious damage twice, not once. Consumables you build have one additional use or one improved tier (your choice at the time of construction). You can modify a number of items per downtime period equal to your INS rather than one item per period.'),
+    ]),
+    ('Investigator', 'IV',
+     'Finding Leads faster, managing the Scene Clock, and assembling meaningful conclusions from incomplete information.',
+     [
+        ('IV1', 'First Look', 1,
+         '+1 die on Investigation checks. When you enter an Investigation Scene, you may immediately attempt to uncover one Lead without advancing the Scene Clock — the clock does not tick on your initial survey.'),
+        ('IV2', 'Chain of Evidence', 2,
+         'When you successfully uncover a Lead, you may immediately attempt to uncover one additional Lead without advancing the Scene Clock. This bonus attempt does not trigger itself — chaining multiple free attempts is not possible. One free follow-up per Lead, no more.'),
+        ('IV3', 'Connecting Thread', 3,
+         'When you Assemble the Picture at the end of an investigation, you may treat one missing Lead as if it had been found at a Success level rather than leaving it as a gap. You are not inventing information — you are inferring what the evidence strongly implies. The GM marks this inferred Lead as speculation. Additionally, when the Scene Clock runs out, you may make one final Lead check.'),
+    ]),
+    ('Pilot', 'PL',
+     'Vehicle operation, protecting passengers under fire, and pushing vehicles past their designed limits. Any Piloting skill applies.',
+     [
+        ('PL1', 'Experienced Hand', 1,
+         '+1 die on all Piloting checks. When piloting a Damaged vehicle (50% HP or below), you may declare that you are managing the damage through skill — the vehicle\'s Damaged penalties (Speed −1 hex, Handling −1) are ignored for the scene.'),
+        ('PL2', 'Steady Platform', 2,
+         'Allies attacking from a vehicle you are piloting ignore the standard penalties for firing from a moving vehicle. Additionally, when a ranged attack targets your vehicle or its passengers, you may spend 1 AP as a Reaction to perform an evasive manoeuvre — all attack rolls against the vehicle and its passengers suffer −1 die until the start of your next turn.'),
+        ('PL3', 'Push the Limits', 3,
+         'You can push a vehicle beyond its designed operational limits. Declare at the start of your turn. For the duration: the vehicle\'s Speed increases by 2 hexes, all weapons mounted on or firing from the vehicle deal +1 die step of damage, and the vehicle\'s Handling increases by +2. The vehicle takes damage at the end of each round this is active — 1d6 on the first round, 2d6 on the second, 3d6 on the third, and so on. This damage bypasses Armor Value.'),
+    ]),
+]
+
+
+class Command(BaseCommand):
+    help = 'Popula o banco com todas as feats do Null Continuum v0.7'
+
+    def handle(self, *args, **options):
+        created_count = 0
+        updated_count = 0
+
+        all_trees = [
+            ('COMBAT', COMBAT_TREES),
+            ('OPERATIONS', OPERATIONS_TREES),
+        ]
+
+        for category, tree_list in all_trees:
+            for tree_name, tree_code, tree_desc, feats_data in tree_list:
+                prev_feat = None
+                for code, name, tier, desc in feats_data:
+                    prereq = None
+                    if tier > 1:
+                        prereq = prev_feat
+
+                    feat, created = FeatDefinition.objects.update_or_create(
+                        code=code,
+                        defaults={
+                            'name': name,
+                            'category': category,
+                            'tree': tree_name,
+                            'tree_code': tree_code,
+                            'tier': tier,
+                            'prerequisite': prereq,
+                            'description': desc,
+                            'tree_description': tree_desc,
+                        }
+                    )
+                    if created:
+                        created_count += 1
+                    else:
+                        updated_count += 1
+
+                    if tier > 0:
+                        prev_feat = feat
+
+        self.stdout.write(self.style.SUCCESS(
+            f'Feats populadas: {created_count} criadas, {updated_count} atualizadas.'
+        ))

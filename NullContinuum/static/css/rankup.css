@@ -1,0 +1,221 @@
+/* ============================================================
+   RANK UP PAGE
+   ============================================================ */
+
+/* --- Summary box --- */
+.rankup-summary {
+    background-color: var(--bg-card);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.rankup-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+.rankup-from {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.rankup-icon {
+    font-size: 1.5rem;
+    color: var(--accent);
+}
+.rankup-to {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.rankup-rewards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.reward-complete {
+    color: var(--success);
+}
+
+.section-badge {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--success);
+    background-color: rgba(60, 218, 124, 0.1);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+.reward-item {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+    min-width: 120px;
+}
+.reward-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.1rem;
+}
+.reward-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+.reward-highlight {
+    color: var(--accent);
+    font-size: 1.2rem;
+}
+.reward-note {
+    flex: 1 1 100%;
+    border-color: var(--accent);
+}
+.reward-note .reward-value {
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    font-weight: 500;
+}
+
+.rankup-unlock {
+    background-color: rgba(60, 218, 124, 0.1);
+    border: 1px solid var(--success);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--success);
+    font-weight: 600;
+}
+
+/* --- Skill selection --- */
+.rankup-skill-cat {
+    margin-bottom: 1rem;
+}
+
+.rankup-skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.4rem;
+}
+
+.rankup-skill-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.15s;
+}
+.rankup-skill-option:hover {
+    background-color: var(--bg-input);
+}
+.rankup-skill-option input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+}
+.rankup-skill-name {
+    flex: 1;
+    color: var(--text-primary);
+}
+.rankup-skill-rank {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--success);
+    flex-shrink: 0;
+}
+
+/* --- Feat selection --- */
+.rankup-feat-group {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(42, 48, 64, 0.4);
+}
+.rankup-feat-group:last-child {
+    border-bottom: none;
+}
+
+.rankup-feat-tree {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+}
+
+.rankup-feat-option {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    margin-bottom: 0.3rem;
+    transition: background-color 0.15s;
+}
+.rankup-feat-option:hover {
+    background-color: var(--bg-input);
+}
+.rankup-feat-option input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+.rankup-feat-code {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+.rankup-feat-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+.rankup-feat-desc {
+    flex: 1 1 100%;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-left: 1.6rem;
+}
+
+/* --- Actions --- */
+.rankup-actions {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+    .rankup-skill-grid {
+        grid-template-columns: 1fr;
+    }
+    .rankup-arrow {
+        gap: 0.5rem;
+    }
+    .rankup-from { font-size: 1rem; }
+    .rankup-to { font-size: 1.1rem; }
+}

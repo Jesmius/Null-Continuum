@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Escolher Feats — {{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="sheet">
+
+    <div class="sheet-header">
+        <h1 class="sheet-name">{{ c.name }} — Escolher Feats</h1>
+    </div>
+
+    {% if errors %}
+    <div class="form-errors">
+        {% for e in errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    {# --- STATUS --- #}
+    <div class="rankup-summary">
+        <div class="rankup-rewards">
+            <div class="reward-item">
+                <span class="reward-label">Combat Feats</span>
+                <span class="reward-value {% if combat_count >= max_combat %}reward-complete{% endif %}">
+                    {{ combat_count }} / {{ max_combat }}
+                </span>
+            </div>
+            <div class="reward-item">
+                <span class="reward-label">Operations Feats</span>
+                <span class="reward-value {% if ops_count >= max_ops %}reward-complete{% endif %}">
+                    {{ ops_count }} / {{ max_ops }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    {# --- COMBAT FEAT TREES --- #}
+    <h2 class="section-title">Combat Feats ({{ combat_count }}/{{ max_combat }})</h2>
+    {% include 'CharSheet/_feat_trees_partial.html' with trees=combat_trees generals=combat_generals editable=True tab='combat' %}
+
+    {# --- OPERATIONS FEAT TREES --- #}
+    <h2 class="section-title">Operations Feats ({{ ops_count }}/{{ max_ops }})</h2>
+    {% include 'CharSheet/_feat_trees_partial.html' with trees=ops_trees generals=ops_generals editable=True tab='operations' %}
+
+    {# --- FINALIZAR --- #}
+    <form method="post" class="form-actions" style="margin-top: 2rem;">
+        {% csrf_token %}
+        <input type="hidden" name="finalize" value="1">
+        <button type="submit" class="btn btn-primary btn-inline">
+            Finalizar Personagem
+        </button>
+        <p class="form-help" style="margin-left: 1rem;">
+            Selecione {{ max_combat }} combat e {{ max_ops }} operations feats antes de finalizar.
+        </p>
+    </form>
+
+</div>
+{% endblock %}

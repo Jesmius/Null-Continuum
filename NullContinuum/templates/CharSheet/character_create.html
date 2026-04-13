@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Novo Personagem — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <h1 class="page-title">Criar Personagem — Passo 1: Base</h1>
+    <p class="form-help">Defina identidade, atributos e skills iniciais. Feats serão escolhidas no próximo passo.</p>
+
+    {% if errors %}
+    <div class="form-errors">
+        {% for e in errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {# === IDENTIDADE === #}
+        <fieldset class="form-section">
+            <legend class="section-title">Identidade</legend>
+            <div class="form-row">
+                <div class="form-group form-group-wide">
+                    <label for="id_name">Nome do Personagem</label>
+                    <input type="text" name="name" id="id_name" class="form-input"
+                           value="{{ post.name|default:'' }}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_bg">Background</label>
+                    <select name="background" id="id_bg" class="form-input">
+                        {% for key, bg in bg_data_json.items %}
+                        <option value="{{ key }}" {% if post.background == key %}selected{% endif %}>{{ bg.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="id_bgc">Background Custom</label>
+                    <input type="text" name="background_custom" id="id_bgc" class="form-input"
+                           value="{{ post.background_custom|default:'' }}" placeholder="Se 'Outro'...">
+                </div>
+            </div>
+        </fieldset>
+
+        {# === ATRIBUTOS === #}
+        <fieldset class="form-section">
+            <legend class="section-title">Atributos (3 pontos extras para distribuir)</legend>
+            <p class="form-help">Todos começam em 1. Adicione até 3 pontos no total. Máximo 3 em qualquer atributo na criação.</p>
+            <div class="form-row form-row-attrs">
+                {% for attr, label in attrs_list %}
+                <div class="form-group form-group-attr">
+                    <label for="id_{{ attr }}">{{ label }}</label>
+                    <input type="number" name="{{ attr }}" id="id_{{ attr }}"
+                           class="form-input attr-input" min="1" max="3"
+                           value="{% if post %}{{ post|default_if_none:'' }}{% else %}1{% endif %}">
+                </div>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        {# === PERFIL NL === #}
+        <fieldset class="form-section">
+            <legend class="section-title">Perfil Non-Linear</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Continuity Constant</label>
+                    <select name="continuity_constant" class="form-input">
+                        <option value="">—</option>
+                        <option value="CC-S">CC-S — Spatial</option>
+                        <option value="CC-T">CC-T — Temporal</option>
+                        <option value="CC-M">CC-M — Material</option>
+                        <option value="CC-B">CC-B — Biological</option>
+                        <option value="CC-C">CC-C — Cognitive</option>
+                        <option value="CC-N">CC-N — Causal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Abstraction Frame</label>
+                    <select name="abstraction_frame" class="form-input">
+                        <option value="">—</option>
+                        <option value="SHIFTER">Shifter</option>
+                        <option value="CHANGER">Changer</option>
+                        <option value="MAKER">Maker</option>
+                        <option value="LEAKER">Leaker</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>NL Rank</label>
+                    <input type="number" name="nl_rank" class="form-input" value="0" min="0" max="15">
+                </div>
+            </div>
+        </fieldset>
+
+        {# === SKILLS === #}
+        <fieldset class="form-section">
+            <legend class="section-title">Skills Iniciais (escolha 4 para Proficient)</legend>
+            <p class="form-help">
+                3 skills do background + 1 skill livre. Selecione qualquer 4 skills.
+                Consulte a descrição do seu background para saber quais são recomendadas.
+            </p>
+            <div class="skills-form-grid">
+                {% for field, name in all_skills %}
+                <label class="rankup-skill-option">
+                    <input type="checkbox" name="selected_skills" value="{{ field }}"
+                        {% if field in post.selected_skills %}checked{% endif %}>
+                    <span class="rankup-skill-name">{{ name }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        {# === NOTAS === #}
+        <fieldset class="form-section">
+            <legend class="section-title">Notas</legend>
+            <div class="form-group">
+                <textarea name="notes" class="form-input" rows="3">{{ post.notes|default:'' }}</textarea>
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-inline">Próximo: Escolher Feats →</button>
+            <a href="{% url 'character_list' %}" class="btn btn-secondary btn-inline">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Feats — {{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="sheet">
+
+    <div class="sheet-header">
+        <h1 class="sheet-name">{{ c.name }}</h1>
+        <div class="sheet-header-actions">
+            <a href="{% url 'character_detail' pk=c.pk %}" class="btn btn-secondary btn-sm">Voltar à Ficha</a>
+        </div>
+    </div>
+
+    {# --- TABS --- #}
+    <div class="feat-tabs">
+        <a href="{% url 'character_feats' pk=c.pk tab='combat' %}"
+           class="feat-tab {% if tab == 'combat' %}feat-tab-active{% endif %}">
+            Combat Feats
+            <span class="feat-tab-count">{{ combat_count }}</span>
+        </a>
+        <a href="{% url 'character_feats' pk=c.pk tab='operations' %}"
+           class="feat-tab {% if tab == 'operations' %}feat-tab-active{% endif %}">
+            Operations Feats
+            <span class="feat-tab-count">{{ ops_count }}</span>
+        </a>
+    </div>
+
+    {# --- SKILL TREES (incluído como partial) --- #}
+    {% include 'CharSheet/_feat_trees_partial.html' with trees=trees generals=generals editable=editable tab=tab %}
+
+</div>
+{% endblock %}
