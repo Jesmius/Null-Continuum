@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Traits — {{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="form-page">
+
+    <h1 class="page-title">{{ c.name }} — Escolher Traits</h1>
+    <p class="form-help">
+        Você começa com {{ starting_tp }} TP. Traits positivos custam TP, traits negativos dão TP.
+        TP não gastos ao fim da criação serão convertidos em Upgrade Feat Points.
+    </p>
+
+    {% if errors %}
+    <div class="form-errors">
+        {% for e in errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    {# --- TP BUDGET --- #}
+    <div class="rankup-summary">
+        <div class="rankup-rewards">
+            <div class="reward-item">
+                <span class="reward-label">TP Inicial</span>
+                <span class="reward-value">{{ starting_tp }}</span>
+            </div>
+            <div class="reward-item">
+                <span class="reward-label">+ Negative Traits</span>
+                <span class="reward-value">+{{ neg_gain }}</span>
+            </div>
+            <div class="reward-item">
+                <span class="reward-label">− Positive Traits</span>
+                <span class="reward-value">−{{ pos_cost }}</span>
+            </div>
+            <div class="reward-item">
+                <span class="reward-label">TP Restante</span>
+                <span class="reward-value {% if remaining_tp < 0 %}reward-danger{% else %}reward-highlight{% endif %}">
+                    {{ remaining_tp }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {# --- POSITIVE TRAITS --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Positive Traits (custam TP)</legend>
+            <div class="traits-grid">
+                {% for trait in positive_traits %}
+                <label class="trait-option">
+                    <input type="checkbox" name="positive_traits" value="{{ trait.id }}"
+                        {% if trait.id|stringformat:"d" in selected_pos %}checked{% endif %}>
+                    <div class="trait-card">
+                        <div class="trait-header">
+                            <span class="trait-name">{{ trait.name }}</span>
+                            <span class="trait-cost trait-cost-positive">−{{ trait.cost }} TP</span>
+                        </div>
+                        <p class="trait-desc">{{ trait.description }}</p>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        {# --- NEGATIVE TRAITS --- #}
+        <fieldset class="form-section">
+            <legend class="section-title">Negative Traits (dão TP)</legend>
+            <div class="traits-grid">
+                {% for trait in negative_traits %}
+                <label class="trait-option">
+                    <input type="checkbox" name="negative_traits" value="{{ trait.id }}"
+                        {% if trait.id|stringformat:"d" in selected_neg %}checked{% endif %}>
+                    <div class="trait-card">
+                        <div class="trait-header">
+                            <span class="trait-name">{{ trait.name }}</span>
+                            <span class="trait-cost trait-cost-negative">+{{ trait.cost|stringformat:"+d"|slice:"1:" }} TP</span>
+                        </div>
+                        <p class="trait-desc">{{ trait.description }}</p>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-inline">Próximo: Escolher Feats →</button>
+            <a href="{% url 'character_detail' pk=c.pk %}" class="btn btn-secondary btn-inline">Pular</a>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

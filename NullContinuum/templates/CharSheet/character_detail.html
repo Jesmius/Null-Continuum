@@ -46,7 +46,8 @@
             </div>
             <div class="ct-stat ct-ap">
                 <span class="ct-label">AP</span>
-                <span class="ct-value">3</span>
+                <span class="ct-value {% if c.current_ap == 0 %}ct-val-danger{% endif %}">{{ c.current_ap }}</span>
+                <span class="ct-sub">/ 3</span>
             </div>
         </div>
 
@@ -75,23 +76,32 @@
                 <button type="submit" class="btn btn-secondary btn-sm">+Temp</button>
             </form>
 
-            {# Set direto #}
-            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-set">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="set_hp">
-                <label class="ct-set-label">HP:</label>
-                <input type="number" name="current_hp" value="{{ c.current_hp }}" class="ct-input ct-input-sm">
-                <label class="ct-set-label">Temp:</label>
-                <input type="number" name="temp_hp" value="{{ c.temp_hp }}" min="0" class="ct-input ct-input-sm">
-                <button type="submit" class="btn btn-secondary btn-sm">Set</button>
-            </form>
-
             {# Full Heal #}
             <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="full_heal">
                 <button type="submit" class="btn btn-secondary btn-sm">Full Heal</button>
             </form>
+
+            {# AP Controls #}
+            <div class="ct-ap-controls">
+                <span class="ct-set-label">AP:</span>
+                <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ap_spend">
+                    <button type="submit" class="btn btn-danger btn-sm ct-ap-btn">−</button>
+                </form>
+                <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ap_gain">
+                    <button type="submit" class="btn btn-heal btn-sm ct-ap-btn">+</button>
+                </form>
+                <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ap_reset">
+                    <button type="submit" class="btn btn-secondary btn-sm">Reset AP</button>
+                </form>
+            </div>
         </div>
     </section>
     {% else %}
@@ -269,6 +279,55 @@
                 Operations Feats
             </a>
         </div>
+    </section>
+    
+    <section class="sheet-section">
+    <h2 class="section-title">Traits</h2>
+
+        {% if background_traits %}
+        <div class="traits-block traits-block-background">
+            <h3 class="traits-block-title">Background Trait</h3>
+            {% for trait in background_traits %}
+            <div class="trait-display trait-display-background">
+                <div class="trait-header">
+                    <span class="trait-name">{{ trait.name }}</span>
+                    <span class="trait-badge trait-badge-background">Background</span>
+                </div>
+                <p class="trait-desc">{{ trait.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if positive_traits %}
+        <div class="traits-block">
+            <h3 class="traits-block-title">Positive Traits</h3>
+            {% for trait in positive_traits %}
+            <div class="trait-display trait-display-positive">
+                <div class="trait-header">
+                    <span class="trait-name">{{ trait.name }}</span>
+                    <span class="trait-badge trait-badge-positive">−{{ trait.cost }} TP</span>
+                </div>
+                <p class="trait-desc">{{ trait.description }}</p>
+            </div>
+        {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if negative_traits %}
+        <div class="traits-block">
+            <h3 class="traits-block-title">Negative Traits</h3>
+            {% for trait in negative_traits %}
+            <div class="trait-display trait-display-negative">
+                <div class="trait-header">
+                    <span class="trait-name">{{ trait.name }}</span>
+                    <span class="trait-badge trait-badge-negative">+{{ trait.cost|stringformat:"+d"|slice:"1:" }} TP</span>
+                </div>
+                <p class="trait-desc">{{ trait.description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </section>
     
     {# --- NOTAS --- #}

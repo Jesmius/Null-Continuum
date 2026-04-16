@@ -117,6 +117,25 @@
     color: var(--text-muted);
 }
 
+/* AP Controls */
+.ct-ap-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: auto;
+}
+
+.ct-form-inline {
+    display: flex;
+}
+
+.ct-ap-btn {
+    min-width: 2rem;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+    font-weight: 700;
+}
+
 /* Heal button color */
 .btn-heal {
     background-color: var(--success);

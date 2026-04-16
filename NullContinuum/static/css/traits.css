@@ -1,0 +1,157 @@
+/* ============================================================
+   TRAITS — Selection grid + Detail display
+   ============================================================ */
+
+/* --- TP Budget colors --- */
+.reward-danger {
+    color: var(--danger);
+}
+
+/* --- Selection grid --- */
+.traits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 0.75rem;
+}
+
+.trait-option {
+    display: block;
+    cursor: pointer;
+    position: relative;
+}
+
+.trait-option input[type="checkbox"] {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    accent-color: var(--accent);
+    width: auto;
+}
+
+.trait-option .trait-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.75rem 0.75rem 2.25rem;
+    background-color: var(--bg-card);
+    transition: border-color 0.15s, background-color 0.15s;
+    min-height: 90px;
+}
+
+.trait-option:hover .trait-card {
+    border-color: var(--accent);
+}
+
+.trait-option input[type="checkbox"]:checked + .trait-card {
+    border-color: var(--accent);
+    background-color: rgba(74, 124, 255, 0.08);
+}
+
+.trait-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+    gap: 0.5rem;
+}
+
+.trait-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.trait-cost {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--radius);
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.trait-cost-positive {
+    background-color: rgba(74, 124, 255, 0.15);
+    color: var(--accent);
+}
+
+.trait-cost-negative {
+    background-color: rgba(60, 218, 124, 0.15);
+    color: var(--success);
+}
+
+.trait-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* --- Detail display (ficha) --- */
+.traits-block {
+    margin-bottom: 1.25rem;
+}
+
+.traits-block-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.traits-block-background .traits-block-title {
+    color: var(--accent);
+}
+
+.trait-display {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--bg-card);
+}
+
+.trait-display-background {
+    border-left: 3px solid var(--accent);
+    background-color: rgba(74, 124, 255, 0.05);
+}
+
+.trait-display-positive {
+    border-left: 3px solid var(--accent);
+}
+
+.trait-display-negative {
+    border-left: 3px solid var(--danger);
+}
+
+.trait-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.trait-badge-background {
+    background-color: rgba(74, 124, 255, 0.15);
+    color: var(--accent);
+}
+
+.trait-badge-positive {
+    background-color: rgba(74, 124, 255, 0.15);
+    color: var(--accent);
+}
+
+.trait-badge-negative {
+    background-color: rgba(255, 90, 90, 0.15);
+    color: var(--danger);
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+    .traits-grid {
+        grid-template-columns: 1fr;
+    }
+}

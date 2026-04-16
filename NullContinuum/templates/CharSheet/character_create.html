@@ -5,7 +5,7 @@
 {% block content %}
 <div class="form-page">
     <h1 class="page-title">Criar Personagem — Passo 1: Base</h1>
-    <p class="form-help">Defina identidade, atributos e skills iniciais. Feats serão escolhidas no próximo passo.</p>
+    <p class="form-help">Defina identidade, atributos e skills iniciais. Traits e Feats serão escolhidos nos próximos passos.</p>
 
     {% if errors %}
     <div class="form-errors">
@@ -45,15 +45,14 @@
 
         {# === ATRIBUTOS === #}
         <fieldset class="form-section">
-            <legend class="section-title">Atributos (3 pontos extras para distribuir)</legend>
-            <p class="form-help">Todos começam em 1. Adicione até 3 pontos no total. Máximo 3 em qualquer atributo na criação.</p>
+            <legend class="section-title">Atributos (4 pontos extras para distribuir)</legend>
+            <p class="form-help">Todos começam em 1. Adicione até 4 pontos no total (3 base + 1 do background). Máximo 3 em qualquer atributo na criação.</p>
             <div class="form-row form-row-attrs">
                 {% for attr, label in attrs_list %}
                 <div class="form-group form-group-attr">
                     <label for="id_{{ attr }}">{{ label }}</label>
                     <input type="number" name="{{ attr }}" id="id_{{ attr }}"
-                           class="form-input attr-input" min="1" max="3"
-                           value="{% if post %}{{ post|default_if_none:'' }}{% else %}1{% endif %}">
+                           class="form-input attr-input" min="1" max="3" value="1">
                 </div>
                 {% endfor %}
             </div>
@@ -119,7 +118,7 @@
         </fieldset>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary btn-inline">Próximo: Escolher Feats →</button>
+            <button type="submit" class="btn btn-primary btn-inline">Próximo: Escolher Traits →</button>
             <a href="{% url 'character_list' %}" class="btn btn-secondary btn-inline">Cancelar</a>
         </div>
     </form>

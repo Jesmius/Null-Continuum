@@ -117,6 +117,7 @@ class Character(models.Model):
     # --- Combat Tracker (editáveis rapidamente) ---
     current_hp = models.IntegerField('HP Atual', default=0)
     temp_hp = models.IntegerField('HP Temporário', default=0)
+    current_ap = models.IntegerField('AP Atual', default=3)
     armor_bonus = models.IntegerField('Bônus de Armadura', default=0)
     shield_bonus = models.IntegerField('Bônus de Escudo', default=0)
     current_load = models.IntegerField('Carga Atual', default=0)
@@ -286,3 +287,4 @@ class Character(models.Model):
         return result
     
     from .feat_models import FeatDefinition, CharacterFeat
+    from .trait_models import TraitDefinition, CharacterTrait

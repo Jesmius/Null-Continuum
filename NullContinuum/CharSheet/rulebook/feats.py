@@ -1,21 +1,15 @@
 """
-Popula o banco com todas as Feats do Null Continuum v0.7.
-Descrições extraídas diretamente do livro de regras.
+Feats do Null Continuum v0.7.
 
-ESTE É O ARQUIVO QUE VOCÊ EDITA para mudar descrições de feats.
-Após editar, rode: python manage.py populate_feats
+Cada tree: (tree_name, tree_code, tree_description, [(code, name, tier, description), ...])
+tier=0 → General (sem tree)
+tier=1,2,3 → posição na árvore (1=base, 2=meio, 3=topo)
 
-Uso: python manage.py populate_feats
+Para mudar: edite aqui e rode `python manage.py sync_rulebook`
 """
-from django.core.management.base import BaseCommand
-from CharSheet.feat_models import FeatDefinition
 
 # ─────────────────────────────────────────────
 #  COMBAT FEATS
-#
-#  Cada tree: (tree_name, tree_code, tree_description, [(code, name, tier, description), ...])
-#  tier=0 → General (sem tree)
-#  tier=1,2,3 → posição na árvore (1=base, 2=meio, 3=topo)
 # ─────────────────────────────────────────────
 
 COMBAT_TREES = [
@@ -170,19 +164,19 @@ OPERATIONS_TREES = [
         ('GO3', 'Controlled Pressure', 0,
          '+1 die on Intimidation checks. Before rolling, you may choose to double this bonus — if you do, the target\'s Disposition toward you decreases by 1 regardless of whether the check succeeds or fails. You extracted what you needed, but they remember exactly how you did it.'),
         ('GO4', 'Deep Research', 0,
-         'During downtime, when researching a specific topic, the GM provides twice the normal detail from a successful check — one extra connected piece of information beyond what the roll would ordinarily yield. This represents systematic, methodical investigation rather than a single query.'),
+         'During downtime, when researching a specific topic, the GM provides twice the normal detail from a successful check — one extra connected piece of information beyond what the roll would ordinarily yield.'),
         ('GO5', 'Social Networking', 0,
-         'Each positive point of Disposition an NPC or faction has toward you represents a level of favour they are willing to extend. You may call in a favour appropriate to their current Disposition — the higher the Disposition, the more significant what they will do. Calling in the favour reduces their Disposition by 1. You spent capital, not the relationship.'),
+         'Each positive point of Disposition an NPC or faction has toward you represents a level of favour they are willing to extend. You may call in a favour appropriate to their current Disposition. Calling in the favour reduces their Disposition by 1.'),
         ('GO6', 'Animal Empathy', 0,
          'You can attempt to calm, approach, or read the intent of a wild or unfamiliar animal without a companion present. Roll PRE + Animal Handling vs a DC set by the animal\'s aggression and temperament. On success, the animal is non-hostile for the scene unless directly threatened or provoked. On a strong success (beat DC by 5+), it will also accept your direction for a simple task.'),
         ('GO7', 'Tech Interface', 0,
-         '+1 die on Technology checks. Given time and access, you can attempt to extract information from damaged, locked, or unfamiliar technology — a successful INS + Technology check against a GM-set DC retrieves data, bypasses a lock, or identifies a device\'s function without documentation. Additionally, by examining a system or interface, you can estimate how long it would take to crack with proper tools versus improvised tools, and whether it exceeds your current capability.'),
+         '+1 die on Technology checks. Given time and access, you can attempt to extract information from damaged, locked, or unfamiliar technology. Additionally, by examining a system or interface, you can estimate how long it would take to crack with proper tools versus improvised tools, and whether it exceeds your current capability.'),
         ('GO8', 'Lie Detector', 0,
-         '+1 die on INS + Intuition checks made to detect deception. When an NPC lies to you and you succeed on a contested Intuition check, the GM confirms the statement was false — not what the truth is, just that something was wrong. Once per scene, you may ask the GM whether a specific statement an NPC made this scene was entirely truthful.'),
+         '+1 die on INS + Intuition checks made to detect deception. When an NPC lies to you and you succeed on a contested Intuition check, the GM confirms the statement was false. Once per scene, you may ask the GM whether a specific statement an NPC made this scene was entirely truthful.'),
         ('GO9', 'Null Sense', 0,
-         'Through accumulated exposure and attentiveness rather than any NL ability, you have learned to notice when something is anomalously wrong. When you enter a space with significant NL activity, or encounter a creature, object, or phenomenon with an active Imprint, the GM gives you a vague signal without prompting. On a successful INS + Survival or INS + Null Theory check (your choice), you can narrow down which Continuity Constant is being violated.'),
+         'Through accumulated exposure and attentiveness rather than any NL ability, you have learned to notice when something is anomalously wrong. When you enter a space with significant NL activity, or encounter a creature, object, or phenomenon with an active Imprint, the GM gives you a vague signal without prompting. On a successful INS + Survival or INS + Null Theory check, you can narrow down which Continuity Constant is being violated.'),
         ('GO10', 'Trader', 0,
-         'When buying, selling, or bartering, you negotiate better terms than face value. On a successful PRE + Persuasion or PRE + Intuition check (your choice based on approach), you either pay 20% less for a purchase, receive 20% more value when selling, or extract one additional concession from a trade already agreed upon. Additionally, you can assess the rough market value of an item by examining it — no check required for mundane goods; INS + History for rare or unusual items.'),
+         'When buying, selling, or bartering, you negotiate better terms than face value. On a successful PRE + Persuasion or PRE + Intuition check, you either pay 20% less for a purchase, receive 20% more value when selling, or extract one additional concession from a trade already agreed upon.'),
     ]),
     ('The Face', 'FA',
      'Reading people, building meaningful relationships, and understanding what matters to those around you. Rewards patience and attention.',
@@ -228,21 +222,21 @@ OPERATIONS_TREES = [
      'Treating injuries outside of combat, improving rest recovery, and providing care that the standard rules cannot.',
      [
         ('FM1', 'Triage', 1,
-         'During a Short Rest, you may treat one adjacent creature. Remove one Tier-1 Condition from them and increase the HP they recover from the Short Rest by their FOR + your Medicine bonus. You do this with what you have — no consumable required.'),
+         'During a Short Rest, you may treat one adjacent creature. Remove one Tier-1 Condition from them and increase the HP they recover from the Short Rest by their FOR + your Medicine bonus.'),
         ('FM2', 'Sustained Care', 2,
          'During a Long Rest, choose a number of allies up to your INS. Those allies recover 75% of their Max HP instead of 50%, and their Fatigue reduces by 2 levels instead of 1. Additionally, you may attempt to treat one of these allies who has a Critical Injury — roll INS + Medicine vs DC 18.'),
         ('FM3', 'Deep Recovery', 3,
-         'During Extended Downtime, your care produces upgrades over the standard rules. Allies under your care heal to full HP after 2 days. Critical Injuries you treat heal in half the normal time. Once per downtime period, one ally may attempt to recover from a Maimed Injury under your care — INS + Medicine vs DC 20 for partial restoration, DC 25 for full recovery.'),
+         'During Extended Downtime, your care produces upgrades over the standard rules. Allies under your care heal to full HP after 2 days. Critical Injuries you treat heal in half the normal time. Once per downtime period, one ally may attempt to recover from a Maimed Injury under your care.'),
     ]),
     ('Engineer', 'EN',
      'Field repairs, consumable crafting, and equipment modification. Makes your gear better and keeps everyone else\'s gear running.',
      [
         ('EN1', 'Field Repair', 1,
-         '+1 die on Engineering checks. You can perform emergency repairs on a vehicle, weapon, or piece of equipment in the field. The repair lasts until the item takes significant damage again. Requires a successful FOR or INS + Engineering check and at least 10 minutes of work.'),
+         '+1 die on Engineering checks. You can perform emergency repairs on a vehicle, weapon, or piece of equipment in the field. The repair lasts until the item takes significant damage again.'),
         ('EN2', 'Workshop Anywhere', 2,
-         'You can build basic consumables from available materials during downtime or between scenes — roll INS + Engineering vs a DC set by what you are producing. Additionally, you can modify existing equipment — adding a Base Trait to a weapon or armor, improving an upgrade already installed, or removing a penalty trait.'),
+         'You can build basic consumables from available materials during downtime or between scenes. Additionally, you can modify existing equipment — adding a Base Trait to a weapon or armor, improving an upgrade already installed, or removing a penalty trait.'),
         ('EN3', 'Master Craft', 3,
-         'Your field repairs now last until the vehicle or item takes serious damage twice, not once. Consumables you build have one additional use or one improved tier (your choice at the time of construction). You can modify a number of items per downtime period equal to your INS rather than one item per period.'),
+         'Your field repairs now last until the vehicle or item takes serious damage twice, not once. Consumables you build have one additional use or one improved tier. You can modify a number of items per downtime period equal to your INS rather than one item per period.'),
     ]),
     ('Investigator', 'IV',
      'Finding Leads faster, managing the Scene Clock, and assembling meaningful conclusions from incomplete information.',
@@ -252,62 +246,16 @@ OPERATIONS_TREES = [
         ('IV2', 'Chain of Evidence', 2,
          'When you successfully uncover a Lead, you may immediately attempt to uncover one additional Lead without advancing the Scene Clock. This bonus attempt does not trigger itself — chaining multiple free attempts is not possible. One free follow-up per Lead, no more.'),
         ('IV3', 'Connecting Thread', 3,
-         'When you Assemble the Picture at the end of an investigation, you may treat one missing Lead as if it had been found at a Success level rather than leaving it as a gap. You are not inventing information — you are inferring what the evidence strongly implies. The GM marks this inferred Lead as speculation. Additionally, when the Scene Clock runs out, you may make one final Lead check.'),
+         'When you Assemble the Picture at the end of an investigation, you may treat one missing Lead as if it had been found at a Success level rather than leaving it as a gap. Additionally, when the Scene Clock runs out, you may make one final Lead check.'),
     ]),
     ('Pilot', 'PL',
      'Vehicle operation, protecting passengers under fire, and pushing vehicles past their designed limits. Any Piloting skill applies.',
      [
         ('PL1', 'Experienced Hand', 1,
-         '+1 die on all Piloting checks. When piloting a Damaged vehicle (50% HP or below), you may declare that you are managing the damage through skill — the vehicle\'s Damaged penalties (Speed −1 hex, Handling −1) are ignored for the scene.'),
+         '+1 die on all Piloting checks. When piloting a Damaged vehicle (50% HP or below), you may declare that you are managing the damage through skill — the vehicle\'s Damaged penalties are ignored for the scene.'),
         ('PL2', 'Steady Platform', 2,
          'Allies attacking from a vehicle you are piloting ignore the standard penalties for firing from a moving vehicle. Additionally, when a ranged attack targets your vehicle or its passengers, you may spend 1 AP as a Reaction to perform an evasive manoeuvre — all attack rolls against the vehicle and its passengers suffer −1 die until the start of your next turn.'),
         ('PL3', 'Push the Limits', 3,
-         'You can push a vehicle beyond its designed operational limits. Declare at the start of your turn. For the duration: the vehicle\'s Speed increases by 2 hexes, all weapons mounted on or firing from the vehicle deal +1 die step of damage, and the vehicle\'s Handling increases by +2. The vehicle takes damage at the end of each round this is active — 1d6 on the first round, 2d6 on the second, 3d6 on the third, and so on. This damage bypasses Armor Value.'),
+         'You can push a vehicle beyond its designed operational limits. For the duration: the vehicle\'s Speed increases by 2 hexes, all weapons mounted on or firing from the vehicle deal +1 die step of damage, and the vehicle\'s Handling increases by +2. The vehicle takes damage at the end of each round this is active — 1d6 on the first round, 2d6 on the second, and so on.'),
     ]),
 ]
-
-
-class Command(BaseCommand):
-    help = 'Popula o banco com todas as feats do Null Continuum v0.7'
-
-    def handle(self, *args, **options):
-        created_count = 0
-        updated_count = 0
-
-        all_trees = [
-            ('COMBAT', COMBAT_TREES),
-            ('OPERATIONS', OPERATIONS_TREES),
-        ]
-
-        for category, tree_list in all_trees:
-            for tree_name, tree_code, tree_desc, feats_data in tree_list:
-                prev_feat = None
-                for code, name, tier, desc in feats_data:
-                    prereq = None
-                    if tier > 1:
-                        prereq = prev_feat
-
-                    feat, created = FeatDefinition.objects.update_or_create(
-                        code=code,
-                        defaults={
-                            'name': name,
-                            'category': category,
-                            'tree': tree_name,
-                            'tree_code': tree_code,
-                            'tier': tier,
-                            'prerequisite': prereq,
-                            'description': desc,
-                            'tree_description': tree_desc,
-                        }
-                    )
-                    if created:
-                        created_count += 1
-                    else:
-                        updated_count += 1
-
-                    if tier > 0:
-                        prev_feat = feat
-
-        self.stdout.write(self.style.SUCCESS(
-            f'Feats populadas: {created_count} criadas, {updated_count} atualizadas.'
-        ))

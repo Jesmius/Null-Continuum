@@ -1,12 +1,12 @@
 """
-Dados dos Backgrounds do Null Continuum v0.7.
+Backgrounds do Null Continuum v0.7.
 Cada background define:
   - attribute_choices: quais atributos podem receber o +1
   - auto_skills: skills automaticamente dadas como Proficient
   - choice_skills: lista de listas — para cada grupo, jogador escolhe 1
   - expert_skill: se alguma skill pode começar como Expert (nome do field)
-  
-O jogador também recebe +1 skill livre à escolha (independente de background).
+
+Para mudar: edite aqui e rode `python manage.py sync_rulebook`
 """
 
 # field_name → referência aos campos do model Character
