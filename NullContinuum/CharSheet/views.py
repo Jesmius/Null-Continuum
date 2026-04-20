@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 
-from .models import Character
+from .models import Character, WeaponItem, VestmentItem, ConsumableItem
 from .feat_models import FeatDefinition, CharacterFeat
 from .trait_models import TraitDefinition, CharacterTrait
 from .rulebook.backgrounds import BACKGROUND_DATA, SKILL_DISPLAY_NAMES, ATTRIBUTE_DISPLAY_NAMES
@@ -10,7 +10,8 @@ from .progression import (
     get_rank_up_rewards, get_available_skill_upgrades,
     get_max_skill_rank_allowed, SKILL_RANK_ORDER,
 )
-from .feat_views import build_tree_data
+from .feat_views import build_tree_data, build_nl_tree_data
+from .forms import WeaponItemForm, VestmentItemForm, ConsumableItemForm
 
 STARTING_TP = 10
 
@@ -284,7 +285,7 @@ def character_create_feats(request, pk):
                 errors.append(f'Selecione {max_ops} operations feats.')
 
             if not errors:
-                return redirect('character_detail', pk=character.pk)
+                return redirect('character_create_nl_feats', pk=character.pk)
 
     combat_trees, combat_generals = build_tree_data(character, 'COMBAT')
     ops_trees, ops_generals = build_tree_data(character, 'OPERATIONS')
@@ -299,6 +300,70 @@ def character_create_feats(request, pk):
         'ops_count': ops_count,
         'max_combat': max_combat,
         'max_ops': max_ops,
+        'errors': errors,
+    })
+
+
+# ─────────────────────────────────────────────
+#  CHARACTER CREATION — STEP 4: NL FEATS
+# ─────────────────────────────────────────────
+
+@login_required
+def character_create_nl_feats(request, pk):
+    character = get_object_or_404(Character, pk=pk, player=request.user)
+
+    max_nl = 2
+    nl_count = CharacterFeat.objects.filter(
+        character=character, feat__category='NON_LINEAR'
+    ).count()
+    errors = []
+
+    if request.method == 'POST':
+        feat_toggle_id = request.POST.get('feat_toggle')
+        finalize = request.POST.get('finalize')
+
+        if feat_toggle_id:
+            try:
+                feat = FeatDefinition.objects.get(id=int(feat_toggle_id), category='NON_LINEAR')
+                existing = CharacterFeat.objects.filter(character=character, feat=feat)
+
+                if existing.exists():
+                    dependents = FeatDefinition.objects.filter(prerequisite=feat)
+                    has_deps = CharacterFeat.objects.filter(character=character, feat__in=dependents).exists()
+                    if not has_deps:
+                        existing.delete()
+                else:
+                    if nl_count >= max_nl:
+                        errors.append(f'Limite de {max_nl} NL feats atingido.')
+                    elif feat.prerequisite_id:
+                        has_prereq = CharacterFeat.objects.filter(
+                            character=character, feat=feat.prerequisite
+                        ).exists()
+                        if not has_prereq:
+                            errors.append(f'Prerequisite: {feat.prerequisite.name}')
+                        else:
+                            CharacterFeat.objects.create(character=character, feat=feat)
+                    else:
+                        CharacterFeat.objects.create(character=character, feat=feat)
+            except (FeatDefinition.DoesNotExist, ValueError):
+                errors.append('Feat inválida.')
+
+            nl_count = CharacterFeat.objects.filter(
+                character=character, feat__category='NON_LINEAR'
+            ).count()
+
+        elif finalize:
+            if not errors:
+                return redirect('character_detail', pk=character.pk)
+
+    nl_trees, nl_generals = build_nl_tree_data(character)
+
+    return render(request, 'CharSheet/character_create_nl_feats.html', {
+        'c': character,
+        'nl_trees': nl_trees,
+        'nl_generals': nl_generals,
+        'nl_count': nl_count,
+        'max_nl': max_nl,
         'errors': errors,
     })
 
@@ -321,12 +386,19 @@ def character_detail(request, pk):
     positive_traits = [ct.trait for ct in all_traits if ct.trait.kind == 'POSITIVE']
     negative_traits = [ct.trait for ct in all_traits if ct.trait.kind == 'NEGATIVE']
 
+    nl_trees, nl_generals = build_nl_tree_data(character)
+
     return render(request, 'CharSheet/character_detail.html', {
         'c': character,
         'skills_by_cat': skills_by_cat,
         'background_traits': background_traits,
         'positive_traits': positive_traits,
         'negative_traits': negative_traits,
+        'weapons': character.weapons.all(),
+        'vestments': character.vestments.all(),
+        'consumables': character.consumables.all(),
+        'nl_trees': nl_trees,
+        'nl_generals': nl_generals,
     })
 
 
@@ -400,8 +472,32 @@ def combat_quick_update(request, pk):
             character.current_ap = min(character.current_ap + 1, 3)
         elif action == 'ap_reset':
             character.current_ap = 3
+        elif action == 'strain_spend':
+            try:
+                amount = int(request.POST.get('amount', 1))
+                if amount > 0:
+                    character.current_strain = character.current_strain + amount
+            except (ValueError, TypeError):
+                pass
+        elif action == 'strain_heal':
+            try:
+                amount = int(request.POST.get('amount', 1))
+                if amount > 0:
+                    character.current_strain = max(character.current_strain - amount, 0)
+            except (ValueError, TypeError):
+                pass
+        elif action == 'strain_full_heal':
+            character.current_strain = 0
         character.save()
-    return redirect('character_detail', pk=character.pk)
+    return redirect('character_tracker', pk=character.pk)
+
+
+@login_required
+def character_tracker(request, pk):
+    character = get_object_or_404(Character, pk=pk)
+    if character.player != request.user and not request.user.is_gm():
+        raise Http404
+    return render(request, 'CharSheet/character_tracker.html', {'c': character})
 
 
 # ─────────────────────────────────────────────
@@ -500,3 +596,164 @@ def rank_up_view(request, pk):
         'ops_count': ops_count,
         'errors': errors,
     })
+
+
+# ─────────────────────────────────────────────
+#  INVENTORY VIEWS
+# ─────────────────────────────────────────────
+
+def _get_owned_character(pk, user):
+    char = get_object_or_404(Character, pk=pk)
+    if char.player != user:
+        raise Http404
+    return char
+
+
+# --- Weapons ---
+
+@login_required
+def weapon_add(request, pk):
+    char = _get_owned_character(pk, request.user)
+    if request.method == 'POST':
+        form = WeaponItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.character = char
+            item.save()
+            _recalc_load(char)
+            return redirect('character_detail', pk=pk)
+    else:
+        form = WeaponItemForm()
+    return render(request, 'CharSheet/inventory_form.html', {
+        'form': form, 'char': char, 'category': 'Arma', 'action': 'Adicionar',
+    })
+
+
+@login_required
+def weapon_edit(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(WeaponItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        form = WeaponItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            _recalc_load(char)
+            return redirect('character_detail', pk=pk)
+    else:
+        form = WeaponItemForm(instance=item)
+    return render(request, 'CharSheet/inventory_form.html', {
+        'form': form, 'char': char, 'category': 'Arma', 'action': 'Editar',
+    })
+
+
+@login_required
+def weapon_delete(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(WeaponItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        item.delete()
+        _recalc_load(char)
+    return redirect('character_detail', pk=pk)
+
+
+# --- Vestments ---
+
+@login_required
+def vestment_add(request, pk):
+    char = _get_owned_character(pk, request.user)
+    if request.method == 'POST':
+        form = VestmentItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.character = char
+            item.save()
+            _recalc_load(char)
+            return redirect('character_detail', pk=pk)
+    else:
+        form = VestmentItemForm()
+    return render(request, 'CharSheet/inventory_form.html', {
+        'form': form, 'char': char, 'category': 'Vestimenta / Escudo', 'action': 'Adicionar',
+    })
+
+
+@login_required
+def vestment_edit(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(VestmentItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        form = VestmentItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            _recalc_load(char)
+            return redirect('character_detail', pk=pk)
+    else:
+        form = VestmentItemForm(instance=item)
+    return render(request, 'CharSheet/inventory_form.html', {
+        'form': form, 'char': char, 'category': 'Vestimenta / Escudo', 'action': 'Editar',
+    })
+
+
+@login_required
+def vestment_delete(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(VestmentItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        item.delete()
+        _recalc_load(char)
+    return redirect('character_detail', pk=pk)
+
+
+# --- Consumables ---
+
+@login_required
+def consumable_add(request, pk):
+    char = _get_owned_character(pk, request.user)
+    if request.method == 'POST':
+        form = ConsumableItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.character = char
+            item.save()
+            _recalc_load(char)
+            return redirect('character_detail', pk=pk)
+    else:
+        form = ConsumableItemForm()
+    return render(request, 'CharSheet/inventory_form.html', {
+        'form': form, 'char': char, 'category': 'Consumível', 'action': 'Adicionar',
+    })
+
+
+@login_required
+def consumable_edit(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(ConsumableItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        form = ConsumableItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            _recalc_load(char)
+            return redirect('character_detail', pk=pk)
+    else:
+        form = ConsumableItemForm(instance=item)
+    return render(request, 'CharSheet/inventory_form.html', {
+        'form': form, 'char': char, 'category': 'Consumível', 'action': 'Editar',
+    })
+
+
+@login_required
+def consumable_delete(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(ConsumableItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        item.delete()
+        _recalc_load(char)
+    return redirect('character_detail', pk=pk)
+
+
+def _recalc_load(char):
+    total = (
+        sum(w.weight * w.quantity for w in char.weapons.all()) +
+        sum(v.weight * v.quantity for v in char.vestments.all()) +
+        sum(c.weight * c.quantity for c in char.consumables.all())
+    )
+    Character.objects.filter(pk=char.pk).update(current_load=total)

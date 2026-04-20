@@ -116,6 +116,7 @@ class Character(models.Model):
 
     # --- Combat Tracker (editáveis rapidamente) ---
     current_hp = models.IntegerField('HP Atual', default=0)
+    current_strain = models.IntegerField('Strain Atual', default=0)
     temp_hp = models.IntegerField('HP Temporário', default=0)
     current_ap = models.IntegerField('AP Atual', default=3)
     armor_bonus = models.IntegerField('Bônus de Armadura', default=0)
@@ -193,6 +194,31 @@ class Character(models.Model):
         return 'V'
 
     @property
+    def overstrain_tier(self):
+        """Retorna '' (limpo), 'OT I', 'OT II' ou 'OT III'."""
+        if self.nl_rank == 0 or self.max_strain == 0:
+            return ''
+        overstrain = self.current_strain - self.max_strain
+        if overstrain <= 0:
+            return ''
+        r = overstrain / self.max_strain
+        if r <= 0.25:
+            return 'OT I'
+        if r <= 0.5:
+            return 'OT II'
+        return 'OT III'
+
+    @property
+    def max_strain(self):
+        """Max Strain por categoria. Cat I: 5+STA, escalando com categoria."""
+        if self.nl_rank == 0:
+            return 0
+        base = {1: 5, 2: 8, 3: 12, 4: 16, 5: 20}.get(
+            {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5}.get(self.category, 1), 5
+        )
+        return base + self.stability
+
+    @property
     def max_hp(self):
         return (self.fortitude * 2) * self.base_rank + 15
 
@@ -226,7 +252,7 @@ class Character(models.Model):
 
     @property
     def stat_points_available(self):
-        return 2 - self.stat_points_used
+        return 4 - self.stat_points_used
 
     @property
     def background_display(self):
@@ -288,3 +314,77 @@ class Character(models.Model):
     
     from .feat_models import FeatDefinition, CharacterFeat
     from .trait_models import TraitDefinition, CharacterTrait
+
+
+class WeaponItem(models.Model):
+    character = models.ForeignKey(
+        Character, on_delete=models.CASCADE, related_name='weapons'
+    )
+    name = models.CharField('Nome', max_length=120)
+    weight = models.PositiveIntegerField('Peso (slots)', default=1)
+    quantity = models.PositiveIntegerField('Quantidade', default=1)
+    damage = models.CharField('Dano', max_length=40, help_text='Ex: 1d6 + 4')
+    hit_bonus = models.IntegerField('Bônus de Acerto', default=0)
+    crit_range = models.PositiveIntegerField('Margem de Crítico', default=20)
+    crit_multiplier = models.PositiveIntegerField('Multiplicador de Crítico', default=2)
+    range_hexes = models.PositiveIntegerField('Alcance (hexes)', default=1)
+    ammo = models.PositiveIntegerField('Munição', null=True, blank=True, help_text='Deixe vazio para armas corpo-a-corpo')
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Arma'
+        verbose_name_plural = 'Armas'
+
+    def __str__(self):
+        return f"{self.name} ({self.character.name})"
+
+    @property
+    def total_weight(self):
+        return self.weight * self.quantity
+
+
+class VestmentItem(models.Model):
+    character = models.ForeignKey(
+        Character, on_delete=models.CASCADE, related_name='vestments'
+    )
+    name = models.CharField('Nome', max_length=120)
+    weight = models.PositiveIntegerField('Peso (slots)', default=1)
+    quantity = models.PositiveIntegerField('Quantidade', default=1)
+    pd_bonus = models.IntegerField('Bônus de PD', default=0)
+    rd = models.IntegerField('RD', default=0)
+    block_bonus = models.IntegerField('Bônus de Block', default=0)
+    agi_penalty = models.IntegerField('Penalidade de AGI', default=0)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Vestimenta / Escudo'
+        verbose_name_plural = 'Vestimentas / Escudos'
+
+    def __str__(self):
+        return f"{self.name} ({self.character.name})"
+
+    @property
+    def total_weight(self):
+        return self.weight * self.quantity
+
+
+class ConsumableItem(models.Model):
+    character = models.ForeignKey(
+        Character, on_delete=models.CASCADE, related_name='consumables'
+    )
+    name = models.CharField('Nome', max_length=120)
+    weight = models.PositiveIntegerField('Peso (slots)', default=1)
+    quantity = models.PositiveIntegerField('Quantidade', default=1)
+    effect = models.TextField('Efeito')
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Consumível'
+        verbose_name_plural = 'Consumíveis'
+
+    def __str__(self):
+        return f"{self.name} ({self.character.name})"
+
+    @property
+    def total_weight(self):
+        return self.weight * self.quantity

@@ -376,6 +376,347 @@
     color: #fff;
 }
 
+/* ──────────────────────────────────────────────
+   INVENTORY
+   ────────────────────────────────────────────── */
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.inv-load-badge {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.inv-enc {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.inv-enc-livre        { background: #1e3a2a; color: #4cde82; }
+.inv-enc-leve         { background: #3a3010; color: #f0c040; }
+.inv-enc-pesado       { background: #3a1e10; color: #f07840; }
+.inv-enc-sobrecarregado { background: #3a1010; color: #f04040; }
+
+.inv-category {
+    margin-bottom: 1.6rem;
+}
+
+.inv-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.inv-category-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 0;
+}
+
+.btn-inv-add {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.btn-inv-add:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+.inv-table-wrap {
+    overflow-x: auto;
+}
+
+.inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.inv-table thead tr {
+    background: #1a1f2e;
+}
+
+.inv-table th {
+    padding: 6px 10px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.inv-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.inv-table tbody tr:hover {
+    background: rgba(74, 124, 255, 0.06);
+}
+
+.inv-mono { font-family: monospace; font-size: 0.9em; }
+.inv-num  { text-align: center; width: 50px; }
+.inv-effect { font-size: 0.83rem; color: var(--text-muted); max-width: 280px; }
+
+.inv-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.inv-btn-edit {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 2px 6px;
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    transition: background 0.15s, color 0.15s;
+}
+.inv-btn-edit:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+.inv-delete-form { display: inline; }
+
+.inv-btn-delete {
+    background: transparent;
+    border: 1px solid #c0392b;
+    color: #c0392b;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.inv-btn-delete:hover {
+    background: #c0392b;
+    color: #fff;
+}
+
+.inv-empty {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0.3rem 0;
+}
+
+/* Inventory form page */
+.inv-form-container { max-width: 540px; }
+.inv-form-char { color: var(--text-muted); font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 1.2rem; }
+.inv-form .form-group { margin-bottom: 1rem; }
+.form-hint  { display: block; font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+.form-error { display: block; font-size: 0.78rem; color: #f04040; margin-top: 3px; }
+
+/* ============================================================
+   NL PROFILE SECTION
+   ============================================================ */
+
+.nl-profile-section {
+    border-left: 4px solid #7c3aed;
+    background: linear-gradient(135deg, rgba(124,58,237,0.04) 0%, transparent 60%);
+}
+
+.nl-section-title {
+    color: #a78bfa !important;
+    border-bottom-color: rgba(124,58,237,0.3) !important;
+}
+
+/* Summary row: CC + Frame + Strain bar */
+.nl-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.nl-card {
+    background: rgba(124,58,237,0.07);
+    border: 1px solid rgba(124,58,237,0.22);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+}
+
+.nl-card-label {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #7c6cb5;
+    font-weight: 700;
+}
+
+.nl-card-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    line-height: 1.2;
+}
+
+.nl-card-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+/* Strain card specifically */
+.nl-card--strain {
+    grid-column: span 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.nl-card--strain .nl-card-info { flex: 1; }
+
+.nl-strain-bar-wrap {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nl-strain-bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: visible;
+    position: relative;
+}
+
+.nl-strain-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.35s ease, background 0.35s;
+    background: #7c3aed;
+    max-width: 100%;
+}
+
+.nl-strain-bar-fill--warn   { background: var(--warning); }
+.nl-strain-bar-fill--danger { background: var(--danger); box-shadow: 0 0 8px rgba(255,74,94,0.5); }
+
+/* Max marker */
+.nl-strain-bar-max {
+    position: absolute;
+    top: -3px;
+    width: 2px;
+    height: 14px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 1px;
+}
+
+.nl-strain-numbers {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    text-align: right;
+}
+
+.nl-strain-numbers.is-warn   { color: var(--warning); }
+.nl-strain-numbers.is-danger { color: var(--danger); font-weight: 700; }
+
+.nl-ot-pill {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+
+.nl-ot-pill--clean  { background: rgba(60,218,124,0.15);  color: var(--success); border: 1px solid rgba(60,218,124,0.4); }
+.nl-ot-pill--oti    { background: rgba(240,160,48,0.15);   color: var(--warning); border: 1px solid rgba(240,160,48,0.4); }
+.nl-ot-pill--otii   { background: rgba(255,100,0,0.15);    color: #ff8030;        border: 1px solid rgba(255,100,0,0.4); }
+.nl-ot-pill--otiii  { background: rgba(255,74,94,0.15);    color: var(--danger);  border: 1px solid rgba(255,74,94,0.4); }
+
+/* NL Feats heading */
+.nl-feats-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #a78bfa;
+    margin: 1.5rem 0 0.5rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(124,58,237,0.25);
+}
+
+/* NL trees: tooltips open DOWNWARD to avoid clipping */
+.nl-trees-wrap .trees-grid {
+    overflow: visible;
+    flex-wrap: wrap;
+}
+
+.nl-trees-wrap .node-tooltip,
+.nl-trees-wrap .trees-grid .tree-column:nth-last-child(-n+3) .node-tooltip {
+    top: calc(100% + 10px);
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 280px;
+}
+
+/* Arrow points UP for downward tooltips */
+.nl-trees-wrap .node-tooltip::after,
+.nl-trees-wrap .trees-grid .tree-column:nth-last-child(-n+3) .node-tooltip::after {
+    top: auto;
+    bottom: calc(100% + 0px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: var(--border);
+    border-top-color: transparent;
+    border-left-color: transparent;
+    border-right-color: transparent;
+}
+
+/* generals-grid: also open downward */
+.nl-trees-wrap .general-node .node-tooltip {
+    top: calc(100% + 10px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}
+
 /* --- Responsive --- */
 @media (max-width: 640px) {
     .attr-grid {

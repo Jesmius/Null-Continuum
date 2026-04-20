@@ -312,6 +312,12 @@
 
 
 
+/* NL trees wrapper — permite que tooltips não sejam clippados */
+.nl-trees-wrap .trees-grid {
+    overflow: visible;
+    flex-wrap: wrap;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
     .trees-grid {

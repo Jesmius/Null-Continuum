@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} {{ category }} — {{ char.name }}{% endblock %}
+
+{% block content %}
+<div class="auth-container inv-form-container">
+    <h1 class="auth-title">{{ action }} {{ category }}</h1>
+    <p class="inv-form-char">Personagem: <strong>{{ char.name }}</strong></p>
+
+    <form method="post" class="inv-form">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <span class="form-hint">{{ field.help_text }}</span>
+            {% endif %}
+            {% for error in field.errors %}
+            <span class="form-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-inline">{{ action }}</button>
+            <a href="{% url 'character_detail' pk=char.pk %}" class="btn btn-secondary btn-inline">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

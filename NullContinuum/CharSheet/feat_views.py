@@ -1,3 +1,4 @@
+from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -67,6 +68,57 @@ def build_tree_data_fresh(category):
             'feat': feat,
             'owned': False,
             'available': available,
+        }
+
+        if feat.tier == 0:
+            generals.append(entry)
+        else:
+            if feat.tree not in trees:
+                trees[feat.tree] = {
+                    'name': feat.tree,
+                    'code': feat.tree_code,
+                    'description': feat.tree_description,
+                    'feats': [],
+                }
+            trees[feat.tree]['feats'].append(entry)
+
+    for tree in trees.values():
+        tree['feats'].sort(key=lambda e: e['feat'].tier, reverse=True)
+
+    sorted_trees = sorted(trees.values(), key=lambda t: t['name'])
+    return sorted_trees, generals
+
+
+def build_nl_tree_data(character):
+    """Monta as feat trees NL filtradas pelo Abstraction Frame do personagem.
+    Mostra feats gerais (nl_frame='') + feats do frame do personagem.
+    """
+    frame = character.abstraction_frame or ''
+    all_feats = FeatDefinition.objects.filter(
+        category='NON_LINEAR'
+    ).filter(
+        models.Q(nl_frame='') | models.Q(nl_frame=frame)
+    ).select_related('prerequisite')
+
+    owned_ids = set(
+        CharacterFeat.objects.filter(character=character)
+        .values_list('feat_id', flat=True)
+    )
+
+    trees = {}
+    generals = []
+
+    for feat in all_feats:
+        owned = feat.id in owned_ids
+        if feat.prerequisite_id:
+            available = feat.prerequisite_id in owned_ids
+        else:
+            available = True
+
+        entry = {
+            'feat': feat,
+            'owned': owned,
+            'available': available and not owned,
         }
 
         if feat.tier == 0:

@@ -1,164 +1,206 @@
 /* ============================================================
-   COMBAT TRACKER — barra rápida de combate
+   COMBAT TRACKER
    ============================================================ */
 
-.combat-tracker {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
+/* ── Shared button colours ──────────────────────────────── */
+
+.btn-heal {
+    background-color: var(--success);
+    color: #fff;
+}
+.btn-heal:hover { background-color: #2fc06a; color: #fff; }
+
+.btn-strain {
+    background-color: #7c3aed;
+    color: #fff;
+}
+.btn-strain:hover { background-color: #6d28d9; color: #fff; }
+
+/* ── Tracker page link button (used in sheet header) ─────── */
+
+.btn-tracker {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    white-space: nowrap;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    transition: background 0.18s, color 0.18s;
+}
+.btn-tracker:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* ── Overstrain Alert Banner ─────────────────────────────── */
+
+.ot-alert {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.65rem 1.1rem;
     border-radius: var(--radius-lg);
-    padding: 1rem 1.25rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid;
+    font-size: 0.85rem;
 }
 
-.ct-readonly {
-    border-left-color: var(--text-muted);
+.ot-alert--oti   { background: rgba(240,160,48,0.10);  border-color: rgba(240,160,48,0.45); }
+.ot-alert--otii  { background: rgba(255,100,0,0.10);   border-color: rgba(255,100,0,0.45); }
+.ot-alert--otiii { background: rgba(255,74,94,0.10);   border-color: rgba(255,74,94,0.45); }
+
+.ot-alert-tier {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.ot-alert--oti   .ot-alert-tier { color: var(--warning); }
+.ot-alert--otii  .ot-alert-tier { color: #ff8030; }
+.ot-alert--otiii .ot-alert-tier { color: var(--danger); }
+
+.ot-alert-desc {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
 }
 
-/* Stats row */
+/* ── Tracker Page — Stats Row ────────────────────────────── */
+
+.combat-tracker {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
 .ct-stats {
     display: flex;
     gap: 1.5rem;
     flex-wrap: wrap;
-    margin-bottom: 0.75rem;
+    align-items: flex-end;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .ct-stat {
-    text-align: center;
-    min-width: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+    min-width: 52px;
 }
 
 .ct-label {
-    display: block;
-    font-size: 0.65rem;
+    font-size: 0.58rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     color: var(--text-muted);
-    margin-bottom: 0.1rem;
+    font-weight: 600;
 }
 
 .ct-value {
-    display: block;
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     font-weight: 700;
     line-height: 1;
     color: var(--text-primary);
+    font-family: var(--font-mono);
 }
 
 .ct-sub {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     font-family: var(--font-mono);
 }
 
-.ct-val-warn {
-    color: var(--warning);
-}
+/* Per-stat accent colours */
+.ct-hp    .ct-value { color: var(--success); }
+.ct-temp  .ct-value { color: var(--accent); }
+.ct-ap    .ct-value { color: var(--accent); }
+.ct-strain-stat .ct-value { color: var(--text-muted); }
 
-.ct-val-danger {
-    color: var(--danger);
-}
+/* State overrides */
+.ct-val-danger  { color: var(--danger) !important; }
+.ct-val-strain  { color: #a78bfa !important; }
 
-.ct-hp .ct-value {
-    color: var(--success);
-}
+/* ── Tracker Page — Controls ─────────────────────────────── */
 
-.ct-temp .ct-value {
-    color: var(--accent);
-}
-
-.ct-pd .ct-value {
-    color: var(--text-primary);
-}
-
-/* Actions row */
 .ct-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
     align-items: center;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border);
 }
 
 .ct-form {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.35rem;
 }
 
-.ct-form-set {
-    margin-left: auto;
+.ct-form-inline {
+    display: inline-flex;
 }
 
-.ct-input {
-    width: 52px;
-    padding: 0.3rem 0.4rem;
+/* Override global input[type="number"] { width: 100% } */
+.ct-form input[type="number"].ct-input {
+    width: 58px;
+    padding: 0.4rem 0.45rem;
     text-align: center;
-    background-color: var(--bg-input);
+    background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--text-primary);
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    transition: border-color 0.18s;
 }
-
-.ct-input:focus {
+.ct-form input[type="number"].ct-input:focus {
     outline: none;
     border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
-.ct-input-sm {
-    width: 48px;
-}
-
-.ct-set-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-/* AP Controls */
 .ct-ap-controls {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    margin-left: auto;
+    gap: 0.35rem;
+    margin-left: 0.5rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--border);
 }
 
-.ct-form-inline {
-    display: flex;
-}
-
-.ct-ap-btn {
-    min-width: 2rem;
-    padding-left: 0.4rem;
-    padding-right: 0.4rem;
+.ct-set-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
     font-weight: 700;
+    white-space: nowrap;
 }
 
-/* Heal button color */
-.btn-heal {
-    background-color: var(--success);
-    color: #fff;
+.ct-ap-btn { min-width: 36px; }
+
+/* Strain controls row */
+.ct-strain-row {
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(124,58,237,0.25);
 }
-.btn-heal:hover {
-    background-color: #2fc06a;
-    color: #fff;
+.ct-strain-row .ct-set-label { color: #a78bfa; }
+
+/* ── Read-only (GM view) ─────────────────────────────────── */
+
+.ct-readonly {
+    opacity: 0.85;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-    .ct-stats {
-        gap: 1rem;
-    }
-    .ct-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .ct-form {
-        justify-content: center;
-    }
-    .ct-form-set {
-        margin-left: 0;
-    }
+/* ── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .ct-stats { gap: 1rem; }
+    .ct-value { font-size: 1.8rem; }
+    .ct-ap-controls { margin-left: 0; padding-left: 0; border-left: none; }
 }

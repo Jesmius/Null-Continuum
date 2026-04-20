@@ -5,6 +5,15 @@ from django.conf import settings
 FEAT_CATEGORY_CHOICES = [
     ('COMBAT', 'Combat'),
     ('OPERATIONS', 'Operations'),
+    ('NON_LINEAR', 'Non-Linear'),
+]
+
+NL_FRAME_CHOICES = [
+    ('', 'General (todos os frames)'),
+    ('SHIFTER', 'Shifter'),
+    ('CHANGER', 'Changer / Anchor'),
+    ('MAKER', 'Maker'),
+    ('LEAKER', 'Leaker'),
 ]
 
 
@@ -35,6 +44,10 @@ class FeatDefinition(models.Model):
     tier = models.PositiveIntegerField(
         'Tier na árvore', default=0,
         help_text='0 = general (sem tree), 1/2/3 = posição na árvore.',
+    )
+    nl_frame = models.CharField(
+        'Frame NL', max_length=10, choices=NL_FRAME_CHOICES, blank=True, default='',
+        help_text='Vazio = geral (todos os frames). Preencher apenas para feats NON_LINEAR frame-específicas.',
     )
     prerequisite = models.ForeignKey(
         'self', null=True, blank=True,

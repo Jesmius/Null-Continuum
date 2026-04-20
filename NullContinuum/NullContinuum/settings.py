@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-CHANGE-THIS-IN-PRODUCTION'
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['alvarenga.pythonanywhere.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
