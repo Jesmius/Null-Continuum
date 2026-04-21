@@ -1,16 +1,18 @@
 {% extends 'base.html' %}
+{% load charsheet_tags %}
 
 {% block title %}Editar {{ c.name }} — Null Continuum{% endblock %}
 
 {% block content %}
 <div class="form-page">
-    <h1 class="page-title">Editar: {{ c.name }}</h1>
-    <p class="form-help">
-        Aqui você pode editar campos de sessão. Para ganhar novas skills, feats ou subir de rank, use o botão de Rank Up.
-    </p>
+    <h1 class="page-title">{% if is_gm_editor %}Editar (GM): {{ c.name }}{% else %}Editar: {{ c.name }}{% endif %}</h1>
+    {% if not is_gm_editor %}
+    <p class="form-help">Aqui você pode editar campos de sessão. Para ganhar novas skills, feats ou subir de rank, use o botão de Rank Up.</p>
+    {% endif %}
 
     <form method="post">
         {% csrf_token %}
+        {% if from_campaign %}<input type="hidden" name="from_campaign" value="{{ from_campaign }}">{% endif %}
 
         <fieldset class="form-section">
             <legend class="section-title">Informações Gerais</legend>
@@ -22,23 +24,83 @@
             </div>
         </fieldset>
 
+        {% if is_gm_editor %}
+        <fieldset class="form-section">
+            <legend class="section-title">Ranks</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_base_rank">Base Rank</label>
+                    <input type="number" name="base_rank" id="id_base_rank" class="form-input" value="{{ c.base_rank }}" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="id_nl_rank">NL Rank</label>
+                    <input type="number" name="nl_rank" id="id_nl_rank" class="form-input" value="{{ c.nl_rank }}" min="0">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+            <legend class="section-title">Atributos</legend>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_agility">AGI</label>
+                    <input type="number" name="agility" id="id_agility" class="form-input" value="{{ c.agility }}" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="id_fortitude">FOR</label>
+                    <input type="number" name="fortitude" id="id_fortitude" class="form-input" value="{{ c.fortitude }}" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="id_insight">INS</label>
+                    <input type="number" name="insight" id="id_insight" class="form-input" value="{{ c.insight }}" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="id_presence">PRE</label>
+                    <input type="number" name="presence" id="id_presence" class="form-input" value="{{ c.presence }}" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="id_stability">STA</label>
+                    <input type="number" name="stability" id="id_stability" class="form-input" value="{{ c.stability }}" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="id_intent">INT</label>
+                    <input type="number" name="intent" id="id_intent" class="form-input" value="{{ c.intent }}" min="1">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+            <legend class="section-title">Skills</legend>
+            <div class="form-row" style="flex-wrap:wrap;">
+                {% for field_name, label, category in skill_fields %}
+                <div class="form-group" style="min-width:200px;">
+                    <label>{{ label }}</label>
+                    <select name="{{ field_name }}" class="form-input skill-select">
+                        <option value="U" {% if c|attr:field_name == 'U' %}selected{% endif %}>Untrained</option>
+                        <option value="T" {% if c|attr:field_name == 'T' %}selected{% endif %}>Trained</option>
+                        <option value="P" {% if c|attr:field_name == 'P' %}selected{% endif %}>Proficient</option>
+                        <option value="E" {% if c|attr:field_name == 'E' %}selected{% endif %}>Expert</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+        </fieldset>
+        {% endif %}
+
         <fieldset class="form-section">
             <legend class="section-title">Defesa & Carga</legend>
             <div class="form-row">
                 <div class="form-group">
                     <label for="id_armor">Bônus de Armadura</label>
-                    <input type="number" name="armor_bonus" id="id_armor" class="form-input"
-                           value="{{ c.armor_bonus }}" min="0">
+                    <input type="number" name="armor_bonus" id="id_armor" class="form-input" value="{{ c.armor_bonus }}" min="0">
                 </div>
                 <div class="form-group">
                     <label for="id_shield">Bônus de Escudo</label>
-                    <input type="number" name="shield_bonus" id="id_shield" class="form-input"
-                           value="{{ c.shield_bonus }}" min="0">
+                    <input type="number" name="shield_bonus" id="id_shield" class="form-input" value="{{ c.shield_bonus }}" min="0">
                 </div>
                 <div class="form-group">
                     <label for="id_load">Carga Atual (slots)</label>
-                    <input type="number" name="current_load" id="id_load" class="form-input"
-                           value="{{ c.current_load }}" min="0">
+                    <input type="number" name="current_load" id="id_load" class="form-input" value="{{ c.current_load }}" min="0">
                 </div>
             </div>
         </fieldset>
@@ -52,7 +114,11 @@
 
         <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-inline">Salvar</button>
+            {% if from_campaign %}
+            <a href="{% url 'campaign_detail' pk=from_campaign %}" class="btn btn-secondary btn-inline">Cancelar</a>
+            {% else %}
             <a href="{% url 'character_detail' pk=c.pk %}" class="btn btn-secondary btn-inline">Cancelar</a>
+            {% endif %}
         </div>
     </form>
 </div>

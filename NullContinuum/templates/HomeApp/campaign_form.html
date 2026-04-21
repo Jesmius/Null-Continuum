@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova Campanha — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1 class="auth-title">Nova Campanha</h1>
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label" for="id_name">Nome</label>
+            <input type="text" id="id_name" name="name" class="form-input" maxlength="120" required autofocus>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-inline">Criar</button>
+            <a href="{% url 'campaign_list' %}" class="btn btn-secondary btn-inline">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

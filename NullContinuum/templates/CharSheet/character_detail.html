@@ -10,14 +10,21 @@
     <div class="sheet-header">
         <h1 class="sheet-name">{{ c.name }}</h1>
         <div class="sheet-header-actions">
-            {% if c.player == user and c.base_rank < 15 %}
+            {% if c.player == user and c.base_rank < 15 and c.level_up_available %}
             <a href="{% url 'rank_up' pk=c.pk %}" class="btn btn-rankup btn-sm">⬆ Rank Up</a>
             {% endif %}
             {% if c.player == user %}
-            <a href="{% url 'character_edit' pk=c.pk %}" class="btn btn-secondary btn-sm">Editar Ficha</a>
+            <a href="{% url 'character_edit' pk=c.pk %}{% if request.GET.from_campaign %}?from_campaign={{ request.GET.from_campaign }}{% endif %}" class="btn btn-secondary btn-sm">Editar Ficha</a>
             <a href="{% url 'character_delete' pk=c.pk %}" class="btn btn-danger btn-sm">Deletar</a>
             {% endif %}
+            {% if user.is_gm %}
+            <a href="{% url 'character_edit' pk=c.pk %}{% if request.GET.from_campaign %}?from_campaign={{ request.GET.from_campaign }}{% endif %}" class="btn btn-secondary btn-sm">Editar Ficha (GM)</a>
+            {% endif %}
+            {% if request.GET.from_campaign %}
+            <a href="{% url 'campaign_detail' pk=request.GET.from_campaign %}" class="btn btn-secondary btn-sm">← Campanha</a>
+            {% else %}
             <a href="{% url 'character_list' %}" class="btn btn-secondary btn-sm">Voltar</a>
+            {% endif %}
         </div>
     </div>
 
@@ -1023,6 +1030,148 @@
                 {% endfor %}
                 {% else %}
                 <p class="inv-empty">Nenhum veículo cadastrado.</p>
+                {% endif %}
+            </section>
+        </div>
+    </details>
+
+    {# ============================================================ #}
+    {# --- COMPANHEIROS                                             #}
+    {# ============================================================ #}
+    <details class="sheet-collapse">
+        <summary class="sheet-collapse-summary">
+            <span>Companheiros</span>
+            <span class="sheet-collapse-chevron">▶</span>
+        </summary>
+        <div class="sheet-collapse-body">
+            <section class="sheet-section">
+                <div class="inv-category-header">
+                    <h3 class="inv-category-title" style="margin:0"></h3>
+                    {% if c.player == user %}
+                    <a href="{% url 'companion_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar Companheiro</a>
+                    {% endif %}
+                </div>
+
+                {% if companions %}
+                {% for comp in companions %}
+                <div class="veh-card veh-state-{{ comp.damage_state }}">
+                    <div class="veh-card-header">
+                        <span class="veh-name">{{ comp.name }}</span>
+                        {% if comp.species %}<span class="veh-size-badge">{{ comp.species }}</span>{% endif %}
+                        {% if comp.is_nl %}<span class="nl-badge">NL</span>{% endif %}
+                        {% if c.player == user %}
+                        <span class="veh-card-actions">
+                            <a href="{% url 'companion_edit' pk=c.pk item_pk=comp.pk %}" class="inv-btn-edit">Editar</a>
+                            <form method="post" action="{% url 'companion_delete' pk=c.pk item_pk=comp.pk %}" class="inv-delete-form">
+                                {% csrf_token %}<button type="submit" class="inv-btn-delete">✕</button>
+                            </form>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    {% if comp.is_nl and comp.overstrain_tier %}
+                    <div class="ot-alert ot-alert--{{ comp.overstrain_tier|lower|cut:' ' }}" style="margin-bottom:.5rem;">
+                        <strong class="ot-alert-tier">{{ comp.overstrain_tier }}</strong>
+                        {% if comp.overstrain_tier == 'OT I' %}
+                        <span class="ot-alert-desc">Redline — Strain band alta automática · Move −1 hex</span>
+                        {% elif comp.overstrain_tier == 'OT II' %}
+                        <span class="ot-alert-desc">Burning — Move reduzido (mín 1) · Supressão de Trigger com desvantagem</span>
+                        {% elif comp.overstrain_tier == 'OT III' %}
+                        <span class="ot-alert-desc">Shattered — Backlash severo · Triggers automáticos não podem ser suprimidos</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="veh-stats-row">
+                        <span class="veh-stat"><span class="veh-stat-label">AGI</span> {{ comp.agility }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">FOR</span> {{ comp.fortitude }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">INS</span> {{ comp.insight }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">PRE</span> {{ comp.presence }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">STA</span> {{ comp.stability }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">PD</span> {{ comp.pd }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">Bond</span> {{ comp.bond_rating }}</span>
+                    </div>
+
+                    <div class="veh-hp-row">
+                        <span class="veh-hp-label">HP</span>
+                        <span class="veh-hp-current">{{ comp.current_hp }}</span>
+                        <span class="veh-hp-sep">/</span>
+                        <span class="veh-hp-max">{{ comp.max_hp }}</span>
+                        <div class="veh-hp-bar-wrap">
+                            <div class="veh-hp-bar" style="width:{% if comp.current_hp >= comp.max_hp %}100{% elif comp.current_hp <= 0 %}0{% else %}{% widthratio comp.current_hp comp.max_hp 100 %}{% endif %}%"></div>
+                        </div>
+                        {% if comp.damage_state == 'damaged' %}
+                        <span class="veh-state-label veh-state-damaged">Ferido</span>
+                        {% elif comp.damage_state == 'critical' %}
+                        <span class="veh-state-label veh-state-critical">Crítico</span>
+                        {% elif comp.damage_state == 'disabled' %}
+                        <span class="veh-state-label veh-state-disabled">Incapacitado</span>
+                        {% endif %}
+                    </div>
+
+                    {% if c.player == user %}
+                    <div class="veh-hp-controls">
+                        <form method="post" action="{% url 'companion_hp_update' pk=c.pk item_pk=comp.pk %}" class="veh-hp-form">
+                            {% csrf_token %}
+                            <input type="number" name="amount" class="ct-input veh-hp-input" value="1" min="1">
+                            <button type="submit" name="action" value="damage" class="ct-btn ct-btn-damage">Dano</button>
+                            <button type="submit" name="action" value="heal" class="ct-btn ct-btn-heal">Curar</button>
+                            <button type="submit" name="action" value="full_heal" class="ct-btn ct-btn-full">Full</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <div class="veh-hp-row" style="margin-top:.4rem;">
+                        <span class="veh-hp-label">Strain</span>
+                        <span class="veh-hp-current {% if comp.current_strain > comp.max_strain %}cst-danger{% elif comp.current_strain > 0 %}cst-warn{% endif %}">{{ comp.current_strain }}</span>
+                        <span class="veh-hp-sep">/</span>
+                        <span class="veh-hp-max">{{ comp.max_strain }}</span>
+                        <div class="veh-hp-bar-wrap">
+                            <div class="veh-hp-bar cst-bar-nl {% if comp.current_strain > comp.max_strain %}cst-bar-danger{% endif %}" style="width:{% if comp.current_strain >= comp.max_strain %}100{% elif comp.current_strain <= 0 %}0{% else %}{% widthratio comp.current_strain comp.max_strain 100 %}{% endif %}%"></div>
+                        </div>
+                        {% if comp.is_nl and comp.overstrain_tier %}
+                        <span class="nl-ot-pill nl-ot-pill--{% if comp.overstrain_tier == 'OT I' %}oti{% elif comp.overstrain_tier == 'OT II' %}otii{% else %}otiii{% endif %}" style="margin-left:4px;">{{ comp.overstrain_tier }}</span>
+                        {% endif %}
+                    </div>
+                    {% if c.player == user %}
+                    <div class="veh-hp-controls">
+                        <form method="post" action="{% url 'companion_strain_update' pk=c.pk item_pk=comp.pk %}" class="veh-hp-form">
+                            {% csrf_token %}
+                            <input type="number" name="amount" class="ct-input veh-hp-input" value="1" min="1">
+                            <button type="submit" name="action" value="add" class="ct-btn ct-btn-strain">+Strain</button>
+                            <button type="submit" name="action" value="remove" class="ct-btn ct-btn-heal">−Strain</button>
+                            <button type="submit" name="action" value="clear" class="ct-btn ct-btn-full">Limpar</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {% if comp.attack %}
+                    <div class="veh-traits"><strong>Ataque:</strong> {{ comp.attack }}</div>
+                    {% endif %}
+
+                    {% if comp.skills %}
+                    <div class="veh-traits"><strong>Skills:</strong> {{ comp.skills }}</div>
+                    {% endif %}
+
+                    {% if comp.traits %}
+                    <div class="veh-traits"><strong>Traits:</strong> {{ comp.traits }}</div>
+                    {% endif %}
+
+                    {% if comp.is_nl %}
+                    <details class="nl-imprint-details veh-nl-details">
+                        <summary class="nl-imprint-summary">Imprint NL</summary>
+                        <div class="nl-imprint-body">
+                            {% if comp.nl_constant %}<p><strong>Continuity Constant:</strong> {{ comp.nl_constant }}</p>{% endif %}
+                            {% if comp.nl_passive %}<p><strong>Passive Expressions:</strong> {{ comp.nl_passive }}</p>{% endif %}
+                            {% if comp.nl_active %}<p><strong>Active Expressions:</strong> {{ comp.nl_active }}</p>{% endif %}
+                            {% if comp.nl_condition_rules %}<p><strong>Regras de Bond / Condição:</strong> {{ comp.nl_condition_rules }}</p>{% endif %}
+                        </div>
+                    </details>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="inv-empty">Nenhum companheiro cadastrado.</p>
                 {% endif %}
             </section>
         </div>

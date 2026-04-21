@@ -41,4 +41,11 @@ urlpatterns = [
     path('personagens/<int:pk>/veiculos/<int:item_pk>/edit/', views.vehicle_edit, name='vehicle_edit'),
     path('personagens/<int:pk>/veiculos/<int:item_pk>/delete/', views.vehicle_delete, name='vehicle_delete'),
     path('personagens/<int:pk>/veiculos/<int:item_pk>/hp/', views.vehicle_hp_update, name='vehicle_hp_update'),
+
+    # Companions
+    path('personagens/<int:pk>/companheiros/add/', views.companion_add, name='companion_add'),
+    path('personagens/<int:pk>/companheiros/<int:item_pk>/edit/', views.companion_edit, name='companion_edit'),
+    path('personagens/<int:pk>/companheiros/<int:item_pk>/delete/', views.companion_delete, name='companion_delete'),
+    path('personagens/<int:pk>/companheiros/<int:item_pk>/hp/', views.companion_hp_update, name='companion_hp_update'),
+    path('personagens/<int:pk>/companheiros/<int:item_pk>/strain/', views.companion_strain_update, name='companion_strain_update'),
 ]

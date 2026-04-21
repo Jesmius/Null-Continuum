@@ -13,3 +13,8 @@ def get_item(dictionary, key):
 def abs(value):
     import builtins
     return builtins.abs(value)
+
+
+@register.filter
+def attr(obj, field_name):
+    return getattr(obj, field_name, '')

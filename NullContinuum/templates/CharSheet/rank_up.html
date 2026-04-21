@@ -92,5 +92,10 @@
     <h2 class="section-title" style="margin-top: 2rem;">Operations Feats (clique para adicionar)</h2>
     {% include 'CharSheet/_feat_trees_partial.html' with trees=ops_trees generals=ops_generals editable=True tab='operations' %}
 
+    {% if c.nl_rank > 0 %}
+    <h2 class="section-title" style="margin-top: 2rem;">Non-Linear Feats (clique para adicionar)</h2>
+    {% include 'CharSheet/_feat_trees_partial.html' with trees=nl_trees generals=nl_generals editable=True tab='nl' %}
+    {% endif %}
+
 </div>
 {% endblock %}

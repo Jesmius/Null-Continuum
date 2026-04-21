@@ -1,5 +1,5 @@
 from django import forms
-from .models import Character, WeaponItem, VestmentItem, ConsumableItem, VehicleItem
+from .models import Character, WeaponItem, VestmentItem, ConsumableItem, VehicleItem, CompanionItem
 
 _NL_FIELD_NAMES = ['is_nl', 'nl_constant', 'nl_passive', 'nl_active', 'nl_condition_rules']
 
@@ -155,5 +155,37 @@ class VehicleItemForm(_NLFieldsMixin, forms.ModelForm):
             'fuel_range':   forms.TextInput(attrs={**_INV_TEXT,
                             'placeholder': 'Ex.: 400 km, 8 horas…'}),
             'traits':       forms.Textarea(attrs={**_INV_TEXT, 'rows': 2}),
+            **_NL_WIDGETS,
+        }
+
+
+class CompanionItemForm(_NLFieldsMixin, forms.ModelForm):
+    class Meta:
+        model = CompanionItem
+        fields = [
+            'name', 'species',
+            'agility', 'fortitude', 'insight', 'presence', 'stability',
+            'current_hp', 'hp_bonus', 'pd_bonus', 'bond_rating', 'current_strain', 'strain_bonus',
+            'attack', 'skills', 'traits',
+            *_NL_FIELD_NAMES,
+        ]
+        widgets = {
+            'name':           forms.TextInput(attrs=_INV_TEXT),
+            'species':        forms.TextInput(attrs={**_INV_TEXT, 'placeholder': 'Ex.: Cão, Corvo, Lobo…'}),
+            'agility':        forms.NumberInput(attrs={**_INV_NUM1, 'max': 5}),
+            'fortitude':      forms.NumberInput(attrs={**_INV_NUM1, 'max': 5}),
+            'insight':        forms.NumberInput(attrs={**_INV_NUM1, 'max': 5}),
+            'presence':       forms.NumberInput(attrs={**_INV_NUM1, 'max': 5}),
+            'stability':      forms.NumberInput(attrs={**_INV_NUM1, 'max': 5}),
+            'current_hp':     forms.NumberInput(attrs=_INV_NUM),
+            'hp_bonus':       forms.NumberInput(attrs={**_INV_NUM, 'placeholder': '0'}),
+            'pd_bonus':       forms.NumberInput(attrs={**_INV_NUM, 'placeholder': '0'}),
+            'bond_rating':    forms.NumberInput(attrs={**_INV_NUM1, 'max': 10}),
+            'current_strain': forms.NumberInput(attrs=_INV_NUM),
+            'strain_bonus':   forms.NumberInput(attrs={**_INV_NUM, 'placeholder': '0'}),
+            'attack':         forms.TextInput(attrs={**_INV_TEXT, 'placeholder': 'Ex.: 1d6 + FOR (mordida)'}),
+            'skills':         forms.Textarea(attrs={**_INV_TEXT, 'rows': 2,
+                              'placeholder': 'Ex.: Percepção (Prof.), Rastreamento (Prof.), NLC +3…'}),
+            'traits':         forms.Textarea(attrs={**_INV_TEXT, 'rows': 2}),
             **_NL_WIDGETS,
         }

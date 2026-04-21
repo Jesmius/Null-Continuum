@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ campaign.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+
+    <div class="camp-list-header">
+        <div>
+            <h1 class="page-title" style="margin-bottom:.2rem;">{{ campaign.name }}</h1>
+            {% if not is_gm %}<p class="camp-gm-label">GM: {{ campaign.gm.username }}</p>{% endif %}
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            <a href="{% url 'campaign_list' %}" class="btn btn-secondary btn-sm">← Voltar</a>
+            {% if is_gm %}
+            <form method="post" action="{% url 'campaign_delete' pk=campaign.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="camp-two-col">
+
+        {# ── Coluna Esquerda: Jogadores ─────────────────────────── #}
+        <div>
+            <div class="camp-col-header">
+                <h2 class="section-title" style="margin:0;">Jogadores</h2>
+                <span class="camp-count">{{ memberships.count }}</span>
+            </div>
+
+            {% if is_gm %}
+            <form method="post" class="camp-invite-form" style="margin-bottom:1rem;">
+                {% csrf_token %}
+                <input type="hidden" name="invite" value="1">
+                <input type="text" name="username" class="form-input camp-invite-input"
+                       placeholder="Username do jogador" required>
+                <button type="submit" class="btn btn-primary btn-sm">Convidar</button>
+            </form>
+            {% if invite_error %}
+            <p class="form-error" style="margin-bottom:.75rem;">{{ invite_error }}</p>
+            {% endif %}
+            {% endif %}
+
+            {% if memberships %}
+            <ul class="camp-member-list">
+                {% for m in memberships %}
+                <li class="camp-member-item">
+                    <span class="camp-member-name">{{ m.player.username }}</span>
+                    {% if is_gm %}
+                    <form method="post" action="{% url 'campaign_remove_member' pk=campaign.pk member_pk=m.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="inv-btn-delete" title="Remover">✕</button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="inv-empty">Nenhum jogador ainda.</p>
+            {% endif %}
+        </div>
+
+        {# ── Coluna Direita: Personagens ───────────────────────── #}
+        <div>
+            <div class="camp-col-header">
+                <h2 class="section-title" style="margin:0;">Personagens</h2>
+                <span class="camp-count">{{ submitted.count }}</span>
+            </div>
+
+            {% if is_member and not is_gm and player_characters %}
+            <form method="post" action="{% url 'campaign_submit_character' pk=campaign.pk %}" class="camp-invite-form" style="margin-bottom:1rem;">
+                {% csrf_token %}
+                <select name="character_pk" class="form-input camp-invite-input">
+                    {% for char in player_characters %}
+                    <option value="{{ char.pk }}">{{ char.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Submeter</button>
+            </form>
+            {% endif %}
+
+            {% if submitted %}
+            <ul class="camp-member-list">
+                {% for entry in submitted %}
+                <li class="camp-char-item">
+                    <div class="camp-char-main">
+                        <a href="{% url 'character_detail' pk=entry.character.pk %}?from_campaign={{ campaign.pk }}"
+                           class="camp-char-link">{{ entry.character.name }}</a>
+                        <span class="camp-char-player">{{ entry.character.player.username }}</span>
+                        {% if entry.character.level_up_available %}
+                        <span class="camp-lu-badge">Level Up ✓</span>
+                        {% endif %}
+                    </div>
+                    <div class="camp-char-actions">
+                        {% if is_gm %}
+                        <form method="post" action="{% url 'campaign_toggle_level_up' pk=campaign.pk char_pk=entry.character.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if entry.character.level_up_available %}btn-secondary{% else %}btn-rankup{% endif %}">
+                                {% if entry.character.level_up_available %}Revogar LU{% else %}Dar Level Up{% endif %}
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if is_gm or entry.character.player == user %}
+                        <form method="post" action="{% url 'campaign_remove_character' pk=campaign.pk char_pk=entry.character.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="inv-btn-delete" title="Remover">✕</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="inv-empty">Nenhum personagem submetido.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

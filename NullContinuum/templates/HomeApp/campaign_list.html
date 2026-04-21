@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Campanhas — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="camp-list-header">
+        <h1 class="page-title">Campanhas</h1>
+        {% if user.is_gm %}
+        <a href="{% url 'campaign_create' %}" class="btn btn-primary btn-sm">+ Nova Campanha</a>
+        {% endif %}
+    </div>
+
+    {% if campaigns %}
+    <div class="card-grid">
+        {% for camp in campaigns %}
+        <a href="{% url 'campaign_detail' pk=camp.pk %}" class="card card-link">
+            <h3>{{ camp.name }}</h3>
+            {% if user.is_gm %}
+            <p>{{ camp.memberships.count }} jogador{{ camp.memberships.count|pluralize:"es" }} · {{ camp.submitted_characters.count }} personagem{{ camp.submitted_characters.count|pluralize:"ns" }}</p>
+            {% else %}
+            <p>GM: {{ camp.gm.username }}</p>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="inv-empty">
+        {% if user.is_gm %}Nenhuma campanha criada ainda.{% else %}Você não está em nenhuma campanha.{% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

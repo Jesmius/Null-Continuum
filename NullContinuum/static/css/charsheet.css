@@ -1927,6 +1927,14 @@
 
 .veh-hp-input {
     width: 4rem !important;
+    padding: 0.3rem 0.4rem;
+    text-align: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 6px);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
 }
 
 .veh-traits {
@@ -1938,6 +1946,26 @@
 .veh-nl-details {
     margin-top: 0.5rem;
 }
+
+.ct-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius, 6px);
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: filter 0.15s;
+}
+.ct-btn:hover { filter: brightness(1.15); }
+
+.ct-btn-damage  { background: #c03030; color: #fff; }
+.ct-btn-heal    { background: #2a9d5c; color: #fff; }
+.ct-btn-full    { background: var(--accent, #5b7cf6); color: #fff; }
+.ct-btn-strain  { background: #7c3aed; color: #fff; }
 
 /* vehicle form row layout */
 .veh-form-row {

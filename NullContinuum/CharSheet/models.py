@@ -122,6 +122,7 @@ class Character(models.Model):
     armor_bonus = models.IntegerField('Bônus de Armadura', default=0)
     shield_bonus = models.IntegerField('Bônus de Escudo', default=0)
     current_load = models.IntegerField('Carga Atual', default=0)
+    level_up_available = models.BooleanField('Level Up Disponível', default=False)
 
     # --- Skills (34 skills) ---
     # Combat
@@ -451,6 +452,94 @@ class VehicleItem(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.character.name})"
+
+    @property
+    def damage_state(self):
+        if self.max_hp == 0 or self.current_hp <= 0:
+            return 'disabled'
+        ratio = self.current_hp / self.max_hp
+        if ratio <= 0.25:
+            return 'critical'
+        if ratio <= 0.5:
+            return 'damaged'
+        return 'normal'
+
+    @property
+    def hp_bar_pct(self):
+        if self.max_hp == 0:
+            return 0
+        return max(0, min(100, self.current_hp * 100 // self.max_hp))
+
+
+# ─────────────────────────────────────────────
+#  COMPANION
+# ─────────────────────────────────────────────
+
+class CompanionItem(models.Model):
+    character = models.ForeignKey(
+        Character, on_delete=models.CASCADE, related_name='companions'
+    )
+    name = models.CharField('Nome', max_length=120)
+    species = models.CharField('Espécie / Tipo', max_length=120, blank=True)
+
+    agility   = models.PositiveIntegerField('AGI', default=1)
+    fortitude = models.PositiveIntegerField('FOR', default=1)
+    insight   = models.PositiveIntegerField('INS', default=1)
+    presence  = models.PositiveIntegerField('PRE', default=1)
+    stability = models.PositiveIntegerField('STA', default=1)
+
+    hp_bonus     = models.IntegerField('Bônus de HP', default=0)
+    pd_bonus     = models.IntegerField('Bônus de PD (armadura/coleira/rig)', default=0)
+    strain_bonus = models.IntegerField('Bônus de Strain', default=0)
+
+    current_hp     = models.IntegerField('HP Atual', default=0)
+    current_strain = models.PositiveIntegerField('Strain Atual', default=0)
+
+    bond_rating = models.PositiveIntegerField('Bond Rating', default=1)
+
+    attack = models.CharField('Ataque Base', max_length=200, blank=True)
+    skills = models.TextField('Skills', blank=True)
+    traits = models.TextField('Traits', blank=True)
+
+    is_nl             = models.BooleanField('Não-Linear', default=False)
+    nl_constant       = models.CharField('Continuity Constant', max_length=200, blank=True)
+    nl_passive        = models.TextField('Passive Expressions', blank=True)
+    nl_active         = models.TextField('Active Expressions', blank=True)
+    nl_condition_rules = models.TextField('Regras de Bond / Condição', blank=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Companheiro'
+        verbose_name_plural = 'Companheiros'
+
+    def __str__(self):
+        return f"{self.name} ({self.character.name})"
+
+    @property
+    def max_hp(self):
+        return 8 + 2 * (self.fortitude + self.stability) + (self.character.base_rank // 2) + self.hp_bonus
+
+    @property
+    def pd(self):
+        return 10 + self.agility + self.pd_bonus
+
+    @property
+    def max_strain(self):
+        return 3 + self.stability + self.strain_bonus
+
+    @property
+    def overstrain_tier(self):
+        if not self.is_nl or self.max_strain == 0:
+            return ''
+        s = self.current_strain
+        ms = self.max_strain
+        if s >= ms * 2:
+            return 'OT III'
+        if s >= ms * 3 // 2:
+            return 'OT II'
+        if s > ms:
+            return 'OT I'
+        return ''
 
     @property
     def damage_state(self):

@@ -10,15 +10,11 @@
     <div class="dashboard-section">
         <h2 class="section-title">Painel do Game Master</h2>
         <div class="card-grid">
-            <a href="{% url 'character_list' %}" class="card card-link">
-                <h3>Personagens</h3>
-                <p>Visualizar fichas dos jogadores da sua campanha.</p>
-            </a>
-            <div class="card">
+            <a href="{% url 'campaign_list' %}" class="card card-link">
                 <h3>Campanhas</h3>
-                <p>Criar e gerenciar campanhas, adicionar jogadores.</p>
-                <span class="card-badge">WIP</span>
-            </div>
+                <p>Criar e gerenciar campanhas, convidar jogadores.</p>
+                {% if campaigns %}<span class="card-badge">{{ campaigns.count }} campanha{{ campaigns.count|pluralize:"s" }}</span>{% endif %}
+            </a>
             <div class="card">
                 <h3>Initiative Tracker</h3>
                 <p>Gerenciar ordem de turno e HP em combate.</p>
@@ -41,6 +37,19 @@
             </a>
         </div>
     </div>
+    {% if campaigns %}
+    <div class="dashboard-section" style="margin-top:1.5rem;">
+        <h2 class="section-title">Suas Campanhas</h2>
+        <div class="card-grid">
+            {% for camp in campaigns %}
+            <a href="{% url 'campaign_detail' pk=camp.pk %}" class="card card-link">
+                <h3>{{ camp.name }}</h3>
+                <p>GM: {{ camp.gm.username }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}

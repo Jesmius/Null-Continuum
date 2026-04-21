@@ -108,4 +108,7 @@ NEGATIVE_TRAITS = [
 
     ('AMNESIAC_TRAIT', 'Amnesiac', -4,
      'No reliable pre-Null memories. Must take the Amnesiac Background. Cannot take Positive Traits that assume a functioning pre-Null network.'),
+
+    ('ATTRIBUTE_REDUCTION', 'Attribute Reduction', -2,
+     'Choose one Attribute. That Attribute is permanently reduced by 1 (minimum 1). Record the chosen Attribute in your notes. The GM edits your sheet accordingly.'),
 ]

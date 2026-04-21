@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 
 from .models import (
-    Character, WeaponItem, VestmentItem, ConsumableItem, VehicleItem,
+    Character, WeaponItem, VestmentItem, ConsumableItem, VehicleItem, CompanionItem,
     ShifterShift, ShiftPassive, ShiftActive, ShiftCost,
     ChangerProfile, ChangerAbility,
     MakerProfile, MakerSchematic, ConstructPassive, ConstructActive, ZoneEffect,
@@ -17,7 +17,7 @@ from .progression import (
     get_max_skill_rank_allowed, SKILL_RANK_ORDER,
 )
 from .feat_views import build_tree_data, build_nl_tree_data
-from .forms import WeaponItemForm, VestmentItemForm, ConsumableItemForm, VehicleItemForm
+from .forms import WeaponItemForm, VestmentItemForm, ConsumableItemForm, VehicleItemForm, CompanionItemForm
 
 STARTING_TP = 10
 
@@ -843,6 +843,7 @@ def character_detail(request, pk):
         'vestments': character.vestments.all(),
         'consumables': character.consumables.all(),
         'vehicles': character.vehicles.all(),
+        'companions': character.companions.all(),
         'nl_trees': nl_trees,
         'nl_generals': nl_generals,
         'shifter_shift': shifter_shift,
@@ -859,7 +860,12 @@ def character_detail(request, pk):
 
 @login_required
 def character_edit(request, pk):
-    character = get_object_or_404(Character, pk=pk, player=request.user)
+    is_gm_editor = request.user.is_gm()
+    if is_gm_editor:
+        character = get_object_or_404(Character, pk=pk)
+    else:
+        character = get_object_or_404(Character, pk=pk, player=request.user)
+
     if request.method == 'POST':
         character.name = request.POST.get('name', character.name).strip()
         try:
@@ -869,10 +875,36 @@ def character_edit(request, pk):
         except (ValueError, TypeError):
             pass
         character.notes = request.POST.get('notes', character.notes)
+
+        if is_gm_editor:
+            _int_fields = [
+                'base_rank', 'nl_rank',
+                'agility', 'fortitude', 'insight', 'presence', 'stability', 'intent',
+            ]
+            for field in _int_fields:
+                try:
+                    val = int(request.POST.get(field, getattr(character, field)))
+                    if val >= 0:
+                        setattr(character, field, val)
+                except (ValueError, TypeError):
+                    pass
+            for sf in _all_skill_fields():
+                val = request.POST.get(sf)
+                if val in ('U', 'T', 'P', 'E'):
+                    setattr(character, sf, val)
+
         character.save()
+        from_campaign = request.POST.get('from_campaign', '')
+        if from_campaign:
+            return redirect('campaign_detail', pk=from_campaign)
         return redirect('character_detail', pk=character.pk)
 
-    return render(request, 'CharSheet/character_edit.html', {'c': character})
+    return render(request, 'CharSheet/character_edit.html', {
+        'c': character,
+        'is_gm_editor': is_gm_editor,
+        'skill_fields': Character.SKILL_FIELDS,
+        'from_campaign': request.GET.get('from_campaign', ''),
+    })
 
 
 @login_required
@@ -1037,11 +1069,13 @@ def rank_up_view(request, pk):
                         setattr(character, sf, SKILL_RANK_ORDER[current_idx + 1])
 
                 character.current_hp = min(character.current_hp + hp_gain, new_max_hp)
+                character.level_up_available = False
                 character.save()
                 return redirect('character_detail', pk=pk)
 
     combat_trees, combat_generals = build_tree_data(character, 'COMBAT')
     ops_trees, ops_generals = build_tree_data(character, 'OPERATIONS')
+    nl_trees, nl_generals = build_nl_tree_data(character)
 
     combat_count = CharacterFeat.objects.filter(
         character=character, feat__category='COMBAT').count()
@@ -1059,6 +1093,8 @@ def rank_up_view(request, pk):
         'combat_generals': combat_generals,
         'ops_trees': ops_trees,
         'ops_generals': ops_generals,
+        'nl_trees': nl_trees,
+        'nl_generals': nl_generals,
         'combat_count': combat_count,
         'ops_count': ops_count,
         'errors': errors,
@@ -1071,7 +1107,7 @@ def rank_up_view(request, pk):
 
 def _get_owned_character(pk, user):
     char = get_object_or_404(Character, pk=pk)
-    if char.player != user:
+    if char.player != user and not user.is_gm():
         raise Http404
     return char
 
@@ -1287,4 +1323,88 @@ def vehicle_hp_update(request, pk, item_pk):
         elif action == 'full_heal':
             vehicle.current_hp = vehicle.max_hp
         vehicle.save()
+    return redirect('character_detail', pk=pk)
+
+
+# --- Companions ---
+
+@login_required
+def companion_add(request, pk):
+    char = _get_owned_character(pk, request.user)
+    if request.method == 'POST':
+        form = CompanionItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.character = char
+            item.save()
+            return redirect('character_detail', pk=pk)
+    else:
+        form = CompanionItemForm()
+    return render(request, 'CharSheet/companion_form.html', {
+        'form': form, 'char': char, 'action': 'Adicionar',
+    })
+
+
+@login_required
+def companion_edit(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(CompanionItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        form = CompanionItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect('character_detail', pk=pk)
+    else:
+        form = CompanionItemForm(instance=item)
+    return render(request, 'CharSheet/companion_form.html', {
+        'form': form, 'char': char, 'action': 'Editar',
+    })
+
+
+@login_required
+def companion_delete(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(CompanionItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        item.delete()
+    return redirect('character_detail', pk=pk)
+
+
+@login_required
+def companion_hp_update(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    companion = get_object_or_404(CompanionItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        try:
+            amount = int(request.POST.get('amount', 0))
+        except (ValueError, TypeError):
+            amount = 0
+        if action == 'damage':
+            companion.current_hp = max(0, companion.current_hp - amount)
+        elif action == 'heal':
+            companion.current_hp = min(companion.max_hp, companion.current_hp + amount)
+        elif action == 'full_heal':
+            companion.current_hp = companion.max_hp
+        companion.save()
+    return redirect('character_detail', pk=pk)
+
+
+@login_required
+def companion_strain_update(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    companion = get_object_or_404(CompanionItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        try:
+            amount = int(request.POST.get('amount', 0))
+        except (ValueError, TypeError):
+            amount = 0
+        if action == 'add':
+            companion.current_strain = companion.current_strain + amount
+        elif action == 'remove':
+            companion.current_strain = max(0, companion.current_strain - amount)
+        elif action == 'clear':
+            companion.current_strain = 0
+        companion.save()
     return redirect('character_detail', pk=pk)

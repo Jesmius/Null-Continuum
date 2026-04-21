@@ -357,6 +357,148 @@ textarea:focus {
     letter-spacing: 0.05em;
 }
 
+/* --- Campaigns --- */
+
+.camp-list-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.camp-section {
+    margin-bottom: 2rem;
+}
+
+.camp-invite-form,
+.camp-submit-form {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.camp-invite-input,
+.camp-submit-select {
+    flex: 1;
+    min-width: 200px;
+    max-width: 360px;
+}
+
+.camp-member-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.camp-member-item {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .5rem .75rem;
+}
+
+.camp-member-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: .9rem;
+    flex: 1;
+}
+
+.camp-char-link {
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    flex: 1;
+    font-size: .9rem;
+}
+.camp-char-link:hover { text-decoration: underline; }
+
+.camp-char-player {
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
+.camp-gm-label {
+    font-size: .85rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.camp-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+@media (max-width: 640px) {
+    .camp-two-col { grid-template-columns: 1fr; }
+}
+
+.camp-col-header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .75rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.camp-count {
+    font-size: .78rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    background: var(--bg-input);
+    padding: .15rem .45rem;
+    border-radius: var(--radius);
+}
+
+.camp-char-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .5rem .75rem;
+    margin-bottom: .35rem;
+}
+
+.camp-char-main {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.camp-char-actions {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    flex-shrink: 0;
+}
+
+.camp-lu-badge {
+    font-size: .7rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #f0a030;
+    background: rgba(240,160,48,.12);
+    border: 1px solid rgba(240,160,48,.35);
+    padding: .1rem .4rem;
+    border-radius: var(--radius);
+}
+
 /* --- Footer --- */
 .footer {
     text-align: center;
