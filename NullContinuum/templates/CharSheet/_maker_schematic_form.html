@@ -1,0 +1,260 @@
+<div class="maker-schematic-header-bar">
+    <span class="maker-schematic-form-title">Schematic {{ idx|add:1 }}</span>
+</div>
+
+<div class="maker-schematic-fields">
+
+    <div class="maker-row-top">
+        <div class="shift-field maker-name-field">
+            <label class="shift-label">Nome do Schematic</label>
+            <input type="text" name="schematic_name_{{ idx }}" class="shift-input"
+                   placeholder="Ex.: Muralha Fraturada, Arma-Osso…"
+                   value="{{ s.name|default:'' }}" required>
+        </div>
+        <div class="shift-field">
+            <label class="shift-label">Tipo</label>
+            <select name="schematic_type_{{ idx }}" class="shift-input">
+                <option value="STRUCTURE" {% if s.construction_type == 'STRUCTURE' %}selected{% endif %}>Structure</option>
+                <option value="EQUIPMENT" {% if s.construction_type == 'EQUIPMENT' %}selected{% endif %}>Equipment</option>
+                <option value="CONSTRUCT" {% if s.construction_type == 'CONSTRUCT' %}selected{% endif %}>Construct</option>
+                <option value="ZONE"      {% if s.construction_type == 'ZONE'      %}selected{% endif %}>Zone</option>
+            </select>
+        </div>
+        <div class="shift-field shift-field--sm">
+            <label class="shift-label">Strain Extra</label>
+            <input type="number" name="schematic_extra_strain_{{ idx }}" class="shift-input shift-input--num"
+                   min="0" max="3" value="{{ s.extra_strain|default:0 }}">
+        </div>
+        <div class="shift-field shift-field--sm">
+            <label class="shift-label">Stability</label>
+            <input type="number" name="schematic_stability_{{ idx }}" class="shift-input shift-input--num"
+                   min="0" max="3" value="{{ s.stability|default:0 }}">
+        </div>
+        <div class="shift-field shift-field--sm">
+            <label class="shift-label">Custo de Uso (Strain)</label>
+            <input type="number" name="schematic_use_strain_{{ idx }}" class="shift-input shift-input--num"
+                   min="0" max="20" value="{{ s.use_strain|default:0 }}">
+        </div>
+    </div>
+
+    {# ── STRUCTURE ── #}
+    <details class="maker-panel-details" {% if not s or s.construction_type == 'STRUCTURE' %}open{% endif %}>
+        <summary class="maker-panel-summary">Structure — Cover &amp; Damage</summary>
+        <div class="maker-panel maker-panel-structure">
+            <div class="shift-field">
+                <label class="shift-label-sm">Cover (descrição)</label>
+                <textarea name="schematic_cover_{{ idx }}" class="shift-textarea" rows="2"
+                          placeholder="Ex.: Cobertura 3m³, +3 PD de uma direção, DC 15 para contornar…">{{ s.cover_description|default:'' }}</textarea>
+            </div>
+            <div class="shift-field">
+                <label class="shift-label-sm">Damage (descrição)</label>
+                <textarea name="schematic_damage_{{ idx }}" class="shift-textarea" rows="2"
+                          placeholder="Ex.: 1d8 de dano NL ao tocar ou entrar…">{{ s.damage_description|default:'' }}</textarea>
+            </div>
+        </div>
+    </details>
+
+    {# ── EQUIPMENT ── #}
+    <details class="maker-panel-details" {% if s.construction_type == 'EQUIPMENT' %}open{% endif %}>
+        <summary class="maker-panel-summary">Equipment — Arma / Armadura / Consumível</summary>
+        <div class="maker-panel maker-panel-equipment">
+            <div class="maker-eq-row">
+                <div class="shift-field">
+                    <label class="shift-label-sm">Categoria</label>
+                    <select name="schematic_eq_cat_{{ idx }}" class="shift-input">
+                        <option value="WEAPON"         {% if s.equipment_category == 'WEAPON'        %}selected{% endif %}>Weapon</option>
+                        <option value="ARMOUR"         {% if s.equipment_category == 'ARMOUR'        %}selected{% endif %}>Armour</option>
+                        <option value="CONSUMABLE"     {% if s.equipment_category == 'CONSUMABLE'    %}selected{% endif %}>Consumable</option>
+                        <option value="NL_ENHANCEMENT" {% if s.equipment_category == 'NL_ENHANCEMENT' %}selected{% endif %}>NL Enhancement</option>
+                    </select>
+                </div>
+                <div class="shift-field shift-field--sm">
+                    <label class="shift-label-sm">Tier</label>
+                    <input type="number" name="schematic_eq_tier_{{ idx }}" class="shift-input shift-input--num"
+                           min="1" max="3" value="{{ s.equipment_tier|default:1 }}">
+                </div>
+            </div>
+            <div class="shift-field">
+                <label class="shift-label-sm">Efeitos / Traits</label>
+                <textarea name="schematic_eq_desc_{{ idx }}" class="shift-textarea" rows="2"
+                          placeholder="Descreva os efeitos, traits de upgrade…">{{ s.equipment_description|default:'' }}</textarea>
+            </div>
+            <div class="shift-field">
+                <label class="shift-label-sm">NL Enhancement (se houver)</label>
+                <textarea name="schematic_nl_enh_{{ idx }}" class="shift-textarea" rows="2"
+                          placeholder="Ex.: +INT de dano NL, FDR 2…">{{ s.nl_enhancement_description|default:'' }}</textarea>
+            </div>
+        </div>
+    </details>
+
+    {# ── CONSTRUCT ── #}
+    <details class="maker-panel-details" {% if s.construction_type == 'CONSTRUCT' %}open{% endif %}>
+        <summary class="maker-panel-summary">Construct — Stats &amp; Habilidades</summary>
+        <div class="maker-panel maker-panel-construct">
+            <div class="maker-eq-row maker-eq-row--construct-top">
+                <div class="shift-field shift-field--sm">
+                    <label class="shift-label-sm">Body Tier</label>
+                    <select name="schematic_body_tier_{{ idx }}" class="shift-input">
+                        <option value="1" {% if s.body_tier == 1 or not s %}selected{% endif %}>1 — Move 2, Atk 1d4, HP=INT×2</option>
+                        <option value="2" {% if s.body_tier == 2 %}selected{% endif %}>2 — Move 3, Atk 1d6, HP=INT×3</option>
+                        <option value="3" {% if s.body_tier == 3 %}selected{% endif %}>3 — Move 4, Atk 1d8, HP=INT×4</option>
+                    </select>
+                </div>
+                <div class="shift-field">
+                    <label class="shift-label-sm">Stats do Construto <span class="construct-budget-hint">(Body Tier × 2 pontos extras, cap 3 por stat, mínimo 1)</span></label>
+                    <div class="construct-stat-inputs">
+                        <div class="construct-stat-input-group">
+                            <label class="construct-stat-label">PRE</label>
+                            <input type="number" name="schematic_cpre_{{ idx }}" class="shift-input shift-input--num"
+                                   min="1" max="3" value="{{ s.construct_pre|default:1 }}">
+                        </div>
+                        <div class="construct-stat-input-group">
+                            <label class="construct-stat-label">INS</label>
+                            <input type="number" name="schematic_cins_{{ idx }}" class="shift-input shift-input--num"
+                                   min="1" max="3" value="{{ s.construct_ins|default:1 }}">
+                        </div>
+                        <div class="construct-stat-input-group">
+                            <label class="construct-stat-label">FOR</label>
+                            <input type="number" name="schematic_cfor_{{ idx }}" class="shift-input shift-input--num"
+                                   min="1" max="3" value="{{ s.construct_for|default:1 }}">
+                        </div>
+                        <div class="construct-stat-input-group">
+                            <label class="construct-stat-label">AGI</label>
+                            <input type="number" name="schematic_cagi_{{ idx }}" class="shift-input shift-input--num"
+                                   min="1" max="3" value="{{ s.construct_agi|default:1 }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="shift-field">
+                <label class="shift-label-sm">Passives</label>
+                <div class="maker-sub-container">
+                    {% if s and s.construct_passives.exists %}
+                        {% with n=s.construct_passives.count %}
+                        {% for p in s.construct_passives.all %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <textarea name="cp_{{ idx }}_{{ forloop.counter0 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: FDR 2, +1 dado em Perception…">{{ p.description }}</textarea>
+                        </div>
+                        {% endfor %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ n|add:1 }}</div>
+                            <textarea name="cp_{{ idx }}_{{ n }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: FDR 2, +1 dado em Perception…"></textarea>
+                        </div>
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ n|add:2 }}</div>
+                            <textarea name="cp_{{ idx }}_{{ n|add:1 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: FDR 2, +1 dado em Perception…"></textarea>
+                        </div>
+                        {% endwith %}
+                    {% else %}
+                        {% for j in "012" %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <textarea name="cp_{{ idx }}_{{ forloop.counter0 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: FDR 2, +1 dado em Perception…"></textarea>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="shift-field">
+                <label class="shift-label-sm">Actives</label>
+                <div class="maker-sub-container">
+                    {% if s and s.construct_actives.exists %}
+                        {% with n=s.construct_actives.count %}
+                        {% for a in s.construct_actives.all %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <textarea name="ca_{{ idx }}_{{ forloop.counter0 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Ataque 1d6, 2 Effect Sub-slots…">{{ a.description }}</textarea>
+                        </div>
+                        {% endfor %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ n|add:1 }}</div>
+                            <textarea name="ca_{{ idx }}_{{ n }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Ataque 1d6, 2 Effect Sub-slots…"></textarea>
+                        </div>
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ n|add:2 }}</div>
+                            <textarea name="ca_{{ idx }}_{{ n|add:1 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Ataque 1d6, 2 Effect Sub-slots…"></textarea>
+                        </div>
+                        {% endwith %}
+                    {% else %}
+                        {% for j in "012" %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <textarea name="ca_{{ idx }}_{{ forloop.counter0 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Ataque 1d6, 2 Effect Sub-slots…"></textarea>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </details>
+
+    {# ── ZONE ── #}
+    <details class="maker-panel-details" {% if s.construction_type == 'ZONE' %}open{% endif %}>
+        <summary class="maker-panel-summary">Zone — Área de Efeito</summary>
+        <div class="maker-panel maker-panel-zone">
+            <div class="maker-eq-row">
+                <div class="shift-field shift-field--sm">
+                    <label class="shift-label-sm">Area Tier</label>
+                    <input type="number" name="schematic_area_tier_{{ idx }}" class="shift-input shift-input--num"
+                           min="1" max="3" value="{{ s.area_tier|default:1 }}">
+                </div>
+                <div class="shift-field">
+                    <label class="shift-label-sm">Geometria / Range</label>
+                    <input type="text" name="schematic_area_desc_{{ idx }}" class="shift-input"
+                           placeholder="Ex.: Raio 2 hexes, linha de 4 hexes…"
+                           value="{{ s.zone_area_description|default:'' }}">
+                </div>
+            </div>
+            <div class="shift-field">
+                <label class="shift-label-sm">Effects</label>
+                <div class="maker-sub-container">
+                    {% if s and s.zone_effects.exists %}
+                        {% with n=s.zone_effects.count %}
+                        {% for e in s.zone_effects.all %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <textarea name="ze_{{ idx }}_{{ forloop.counter0 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Condição Tier 1 ao entrar, 1d4 dano NL…">{{ e.description }}</textarea>
+                        </div>
+                        {% endfor %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ n|add:1 }}</div>
+                            <textarea name="ze_{{ idx }}_{{ n }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Condição Tier 1 ao entrar, 1d4 dano NL…"></textarea>
+                        </div>
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ n|add:2 }}</div>
+                            <textarea name="ze_{{ idx }}_{{ n|add:1 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Condição Tier 1 ao entrar, 1d4 dano NL…"></textarea>
+                        </div>
+                        {% endwith %}
+                    {% else %}
+                        {% for j in "012" %}
+                        <div class="shift-row">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <textarea name="ze_{{ idx }}_{{ forloop.counter0 }}" class="shift-textarea" rows="2"
+                                      placeholder="Ex.: Condição Tier 1 ao entrar, 1d4 dano NL…"></textarea>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <div class="shift-field">
+        <label class="shift-label-sm">Notas Gerais</label>
+        <textarea name="schematic_notes_{{ idx }}" class="shift-textarea" rows="2"
+                  placeholder="Observações adicionais…">{{ s.notes|default:'' }}</textarea>
+    </div>
+
+</div>

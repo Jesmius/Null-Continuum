@@ -2,7 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 
-from .models import Character, WeaponItem, VestmentItem, ConsumableItem
+from .models import (
+    Character, WeaponItem, VestmentItem, ConsumableItem, VehicleItem,
+    ShifterShift, ShiftPassive, ShiftActive, ShiftCost,
+    ChangerProfile, ChangerAbility,
+    MakerProfile, MakerSchematic, ConstructPassive, ConstructActive, ZoneEffect,
+    LeakerProfile, LeakerEmission, LeakerVolatility, LeakerBleed,
+)
 from .feat_models import FeatDefinition, CharacterFeat
 from .trait_models import TraitDefinition, CharacterTrait
 from .rulebook.backgrounds import BACKGROUND_DATA, SKILL_DISPLAY_NAMES, ATTRIBUTE_DISPLAY_NAMES
@@ -11,7 +17,7 @@ from .progression import (
     get_max_skill_rank_allowed, SKILL_RANK_ORDER,
 )
 from .feat_views import build_tree_data, build_nl_tree_data
-from .forms import WeaponItemForm, VestmentItemForm, ConsumableItemForm
+from .forms import WeaponItemForm, VestmentItemForm, ConsumableItemForm, VehicleItemForm
 
 STARTING_TP = 10
 
@@ -354,6 +360,14 @@ def character_create_nl_feats(request, pk):
 
         elif finalize:
             if not errors:
+                if character.abstraction_frame == 'SHIFTER':
+                    return redirect('character_create_shifter', pk=character.pk)
+                if character.abstraction_frame == 'CHANGER':
+                    return redirect('character_create_changer', pk=character.pk)
+                if character.abstraction_frame == 'MAKER':
+                    return redirect('character_create_maker', pk=character.pk)
+                if character.abstraction_frame == 'LEAKER':
+                    return redirect('character_create_leaker', pk=character.pk)
                 return redirect('character_detail', pk=character.pk)
 
     nl_trees, nl_generals = build_nl_tree_data(character)
@@ -369,7 +383,407 @@ def character_create_nl_feats(request, pk):
 
 
 # ─────────────────────────────────────────────
+#  CHARACTER CREATION — STEP 5: SHIFTER SHIFT
+# ─────────────────────────────────────────────
+
+@login_required
+def character_create_shifter(request, pk):
+    character = get_object_or_404(Character, pk=pk, player=request.user)
+    if character.abstraction_frame != 'SHIFTER':
+        return redirect('character_detail', pk=pk)
+
+    try:
+        existing_shift = character.shifter_shift
+    except ShifterShift.DoesNotExist:
+        existing_shift = None
+
+    errors = []
+
+    if request.method == 'POST':
+        shift_name = request.POST.get('shift_name', '').strip()
+        if not shift_name:
+            errors.append('O Shift precisa de um nome.')
+
+        try:
+            transform_strain = int(request.POST.get('transform_strain', 0))
+        except (ValueError, TypeError):
+            transform_strain = 0
+
+        try:
+            transform_ap = int(request.POST.get('transform_ap', 0))
+        except (ValueError, TypeError):
+            transform_ap = 0
+
+        passives = []
+        i = 0
+        while f'passive_desc_{i}' in request.POST:
+            desc = request.POST.get(f'passive_desc_{i}', '').strip()
+            if desc:
+                passives.append(desc)
+            i += 1
+
+        actives = []
+        i = 0
+        while f'active_name_{i}' in request.POST:
+            name = request.POST.get(f'active_name_{i}', '').strip()
+            damage_effect = request.POST.get(f'active_effect_{i}', '').strip()
+            try:
+                range_h = int(request.POST.get(f'active_range_{i}', 1))
+            except (ValueError, TypeError):
+                range_h = 1
+            try:
+                strain_c = int(request.POST.get(f'active_strain_{i}', 0))
+            except (ValueError, TypeError):
+                strain_c = 0
+            duration = request.POST.get(f'active_duration_{i}', '').strip()
+            if name or damage_effect:
+                actives.append({
+                    'name': name,
+                    'damage_effect': damage_effect,
+                    'range_hexes': range_h,
+                    'strain_cost': strain_c,
+                    'duration': duration,
+                })
+            i += 1
+
+        costs = []
+        i = 0
+        while f'cost_desc_{i}' in request.POST:
+            desc = request.POST.get(f'cost_desc_{i}', '').strip()
+            if desc:
+                costs.append(desc)
+            i += 1
+
+        if not errors:
+            if existing_shift:
+                shift = existing_shift
+                shift.name = shift_name
+                shift.transform_strain = transform_strain
+                shift.transform_ap = transform_ap
+                shift.save()
+                shift.passives.all().delete()
+                shift.actives.all().delete()
+                shift.costs.all().delete()
+            else:
+                shift = ShifterShift.objects.create(
+                    character=character,
+                    name=shift_name,
+                    transform_strain=transform_strain,
+                    transform_ap=transform_ap,
+                )
+
+            for order, desc in enumerate(passives):
+                ShiftPassive.objects.create(shift=shift, description=desc, order=order)
+
+            for order, data in enumerate(actives):
+                ShiftActive.objects.create(shift=shift, order=order, **data)
+
+            for order, desc in enumerate(costs):
+                ShiftCost.objects.create(shift=shift, description=desc, order=order)
+
+            return redirect('character_detail', pk=character.pk)
+
+    return render(request, 'CharSheet/character_create_shifter.html', {
+        'c': character,
+        'existing_shift': existing_shift,
+        'errors': errors,
+    })
+
+
+# ─────────────────────────────────────────────
+#  CHARACTER CREATION — STEP 5: CHANGER
+# ─────────────────────────────────────────────
+
+@login_required
+def character_create_changer(request, pk):
+    character = get_object_or_404(Character, pk=pk, player=request.user)
+    if character.abstraction_frame != 'CHANGER':
+        return redirect('character_detail', pk=pk)
+
+    try:
+        existing_profile = character.changer_profile
+    except ChangerProfile.DoesNotExist:
+        existing_profile = None
+
+    errors = []
+
+    if request.method == 'POST':
+        abilities = []
+        i = 0
+        while f'ability_name_{i}' in request.POST:
+            name = request.POST.get(f'ability_name_{i}', '').strip()
+            damage_effect = request.POST.get(f'ability_effect_{i}', '').strip()
+            try:
+                range_h = int(request.POST.get(f'ability_range_{i}', 1))
+            except (ValueError, TypeError):
+                range_h = 1
+            try:
+                strain_c = int(request.POST.get(f'ability_strain_{i}', 0))
+            except (ValueError, TypeError):
+                strain_c = 0
+            duration = request.POST.get(f'ability_duration_{i}', '').strip()
+            restrictions = request.POST.get(f'ability_restrictions_{i}', '').strip()
+            if name or damage_effect:
+                abilities.append({
+                    'name': name,
+                    'damage_effect': damage_effect,
+                    'range_hexes': range_h,
+                    'strain_cost': strain_c,
+                    'duration': duration,
+                    'restrictions': restrictions,
+                })
+            i += 1
+
+        if not errors:
+            if existing_profile:
+                profile = existing_profile
+                profile.abilities.all().delete()
+            else:
+                profile = ChangerProfile.objects.create(character=character)
+
+            for order, data in enumerate(abilities):
+                ChangerAbility.objects.create(profile=profile, order=order, **data)
+
+            return redirect('character_detail', pk=character.pk)
+
+    return render(request, 'CharSheet/character_create_changer.html', {
+        'c': character,
+        'existing_profile': existing_profile,
+        'errors': errors,
+    })
+
+
+# ─────────────────────────────────────────────
+#  CHARACTER CREATION — STEP 5: MAKER
+# ─────────────────────────────────────────────
+
+@login_required
+def character_create_maker(request, pk):
+    character = get_object_or_404(Character, pk=pk, player=request.user)
+    if character.abstraction_frame != 'MAKER':
+        return redirect('character_detail', pk=pk)
+
+    try:
+        existing_profile = character.maker_profile
+        existing_schematics = list(existing_profile.schematics.prefetch_related(
+            'construct_passives', 'construct_actives', 'zone_effects'
+        ))
+    except MakerProfile.DoesNotExist:
+        existing_profile = None
+        existing_schematics = []
+
+    errors = []
+
+    if request.method == 'POST':
+        schematics_data = []
+        i = 0
+        while f'schematic_name_{i}' in request.POST:
+            name = request.POST.get(f'schematic_name_{i}', '').strip()
+            ctype = request.POST.get(f'schematic_type_{i}', '').strip()
+            try:
+                extra_strain = int(request.POST.get(f'schematic_extra_strain_{i}', 0))
+            except (ValueError, TypeError):
+                extra_strain = 0
+            try:
+                stability = min(3, int(request.POST.get(f'schematic_stability_{i}', 0)))
+            except (ValueError, TypeError):
+                stability = 0
+            notes = request.POST.get(f'schematic_notes_{i}', '').strip()
+
+            try:
+                use_strain = int(request.POST.get(f'schematic_use_strain_{i}', 0))
+            except (ValueError, TypeError):
+                use_strain = 0
+            data = {
+                'name': name, 'construction_type': ctype,
+                'extra_strain': extra_strain, 'stability': stability,
+                'use_strain': use_strain, 'notes': notes,
+                'cover_description': request.POST.get(f'schematic_cover_{i}', '').strip(),
+                'damage_description': request.POST.get(f'schematic_damage_{i}', '').strip(),
+                'equipment_category': request.POST.get(f'schematic_eq_cat_{i}', '').strip(),
+                'equipment_description': request.POST.get(f'schematic_eq_desc_{i}', '').strip(),
+                'nl_enhancement_description': request.POST.get(f'schematic_nl_enh_{i}', '').strip(),
+                'zone_area_description': request.POST.get(f'schematic_area_desc_{i}', '').strip(),
+            }
+            try:
+                data['equipment_tier'] = min(3, int(request.POST.get(f'schematic_eq_tier_{i}', 1)))
+            except (ValueError, TypeError):
+                data['equipment_tier'] = 1
+            try:
+                data['body_tier'] = min(3, int(request.POST.get(f'schematic_body_tier_{i}', 1)))
+            except (ValueError, TypeError):
+                data['body_tier'] = 1
+            for stat in ('pre', 'ins', 'for', 'agi'):
+                try:
+                    data[f'construct_{stat}'] = min(3, max(1, int(request.POST.get(f'schematic_c{stat}_{i}', 1))))
+                except (ValueError, TypeError):
+                    data[f'construct_{stat}'] = 1
+            try:
+                data['area_tier'] = min(3, int(request.POST.get(f'schematic_area_tier_{i}', 1)))
+            except (ValueError, TypeError):
+                data['area_tier'] = 1
+
+            # Sub-items: construct passives/actives, zone effects
+            passives, actives, effects = [], [], []
+            j = 0
+            while f'cp_{i}_{j}' in request.POST:
+                desc = request.POST.get(f'cp_{i}_{j}', '').strip()
+                if desc:
+                    passives.append(desc)
+                j += 1
+            j = 0
+            while f'ca_{i}_{j}' in request.POST:
+                desc = request.POST.get(f'ca_{i}_{j}', '').strip()
+                if desc:
+                    actives.append(desc)
+                j += 1
+            j = 0
+            while f'ze_{i}_{j}' in request.POST:
+                desc = request.POST.get(f'ze_{i}_{j}', '').strip()
+                if desc:
+                    effects.append(desc)
+                j += 1
+            data['_passives'] = passives
+            data['_actives'] = actives
+            data['_effects'] = effects
+
+            if name and ctype:
+                schematics_data.append(data)
+            i += 1
+
+        if not schematics_data:
+            errors.append('Adicione pelo menos um Schematic.')
+
+        if not errors:
+            if existing_profile:
+                profile = existing_profile
+                profile.schematics.all().delete()
+            else:
+                profile = MakerProfile.objects.create(character=character)
+
+            for order, data in enumerate(schematics_data):
+                passives = data.pop('_passives')
+                actives = data.pop('_actives')
+                effects = data.pop('_effects')
+                schematic = MakerSchematic.objects.create(profile=profile, order=order, **data)
+                for j, desc in enumerate(passives):
+                    ConstructPassive.objects.create(schematic=schematic, description=desc, order=j)
+                for j, desc in enumerate(actives):
+                    ConstructActive.objects.create(schematic=schematic, description=desc, order=j)
+                for j, desc in enumerate(effects):
+                    ZoneEffect.objects.create(schematic=schematic, description=desc, order=j)
+
+            return redirect('character_detail', pk=character.pk)
+
+    return render(request, 'CharSheet/character_create_maker.html', {
+        'c': character,
+        'existing_profile': existing_profile,
+        'existing_schematics': existing_schematics,
+        'errors': errors,
+    })
+
+
+# ─────────────────────────────────────────────
 #  CHARACTER DETAIL
+# ─────────────────────────────────────────────
+#  LEAKER FRAME BUILDER
+# ─────────────────────────────────────────────
+
+@login_required
+def character_create_leaker(request, pk):
+    character = get_object_or_404(Character, pk=pk, player=request.user)
+    if character.abstraction_frame != 'LEAKER':
+        return redirect('character_detail', pk=pk)
+
+    try:
+        existing_profile = character.leaker_profile
+        existing_emissions = list(existing_profile.emissions.all())
+        existing_volatility = list(existing_profile.volatility_stages.all())
+        existing_bleeds = list(existing_profile.bleeds.all())
+    except LeakerProfile.DoesNotExist:
+        existing_profile = None
+        existing_emissions = []
+        existing_volatility = []
+        existing_bleeds = []
+
+    errors = []
+
+    if request.method == 'POST':
+        emissions = []
+        i = 0
+        while f'emission_name_{i}' in request.POST:
+            name = request.POST.get(f'emission_name_{i}', '').strip()
+            desc = request.POST.get(f'emission_desc_{i}', '').strip()
+            radius_str = request.POST.get(f'emission_radius_{i}', '').strip()
+            radius = None
+            if radius_str:
+                try:
+                    radius = int(radius_str)
+                except (ValueError, TypeError):
+                    pass
+            if name:
+                emissions.append({'name': name, 'description': desc, 'radius': radius})
+            i += 1
+
+        volatility = []
+        i = 0
+        while f'vol_label_{i}' in request.POST:
+            label = request.POST.get(f'vol_label_{i}', '').strip()
+            desc = request.POST.get(f'vol_desc_{i}', '').strip()
+            if label:
+                volatility.append({'stage_label': label, 'description': desc})
+            i += 1
+
+        bleeds = []
+        i = 0
+        while f'bleed_name_{i}' in request.POST:
+            name = request.POST.get(f'bleed_name_{i}', '').strip()
+            effect = request.POST.get(f'bleed_effect_{i}', '').strip()
+            try:
+                ap_cost = max(1, int(request.POST.get(f'bleed_ap_{i}', 1)))
+            except (ValueError, TypeError):
+                ap_cost = 1
+            strain_info = request.POST.get(f'bleed_strain_{i}', '').strip()
+            description = request.POST.get(f'bleed_desc_{i}', '').strip()
+            if name:
+                bleeds.append({
+                    'name': name, 'effect': effect, 'ap_cost': ap_cost,
+                    'strain_info': strain_info, 'description': description,
+                })
+            i += 1
+
+        if not emissions and not bleeds:
+            errors.append('Adicione pelo menos uma Emission ou Bleed.')
+
+        if not errors:
+            if existing_profile:
+                profile = existing_profile
+                profile.emissions.all().delete()
+                profile.volatility_stages.all().delete()
+                profile.bleeds.all().delete()
+            else:
+                profile = LeakerProfile.objects.create(character=character)
+
+            for order, data in enumerate(emissions):
+                LeakerEmission.objects.create(profile=profile, order=order, **data)
+            for order, data in enumerate(volatility):
+                LeakerVolatility.objects.create(profile=profile, order=order, **data)
+            for order, data in enumerate(bleeds):
+                LeakerBleed.objects.create(profile=profile, order=order, **data)
+
+            return redirect('character_detail', pk=character.pk)
+
+    return render(request, 'CharSheet/character_create_leaker.html', {
+        'c': character,
+        'existing_profile': existing_profile,
+        'existing_emissions': existing_emissions,
+        'existing_volatility': existing_volatility,
+        'existing_bleeds': existing_bleeds,
+        'default_vol_labels': ['OT I', 'OT II', 'OT III'],
+        'errors': errors,
+    })
+
+
 # ─────────────────────────────────────────────
 
 @login_required
@@ -388,6 +802,37 @@ def character_detail(request, pk):
 
     nl_trees, nl_generals = build_nl_tree_data(character)
 
+    try:
+        shifter_shift = character.shifter_shift
+    except ShifterShift.DoesNotExist:
+        shifter_shift = None
+
+    try:
+        changer_profile = character.changer_profile
+    except ChangerProfile.DoesNotExist:
+        changer_profile = None
+
+    try:
+        maker_profile = character.maker_profile
+    except MakerProfile.DoesNotExist:
+        maker_profile = None
+
+    try:
+        leaker_profile = character.leaker_profile
+    except LeakerProfile.DoesNotExist:
+        leaker_profile = None
+
+    maker_schematics = []
+    if maker_profile:
+        for s in maker_profile.schematics.prefetch_related(
+            'construct_passives', 'construct_actives', 'zone_effects'
+        ):
+            construct_max_hp = (
+                character.intent * (s.body_tier + 1 + s.stability)
+                if s.construction_type == 'CONSTRUCT' else 0
+            )
+            maker_schematics.append({'s': s, 'construct_max_hp': construct_max_hp})
+
     return render(request, 'CharSheet/character_detail.html', {
         'c': character,
         'skills_by_cat': skills_by_cat,
@@ -397,8 +842,14 @@ def character_detail(request, pk):
         'weapons': character.weapons.all(),
         'vestments': character.vestments.all(),
         'consumables': character.consumables.all(),
+        'vehicles': character.vehicles.all(),
         'nl_trees': nl_trees,
         'nl_generals': nl_generals,
+        'shifter_shift': shifter_shift,
+        'changer_profile': changer_profile,
+        'maker_profile': maker_profile,
+        'maker_schematics': maker_schematics,
+        'leaker_profile': leaker_profile,
     })
 
 
@@ -489,15 +940,31 @@ def combat_quick_update(request, pk):
         elif action == 'strain_full_heal':
             character.current_strain = 0
         character.save()
-    return redirect('character_tracker', pk=character.pk)
+    return redirect('character_detail', pk=character.pk)
 
 
 @login_required
-def character_tracker(request, pk):
-    character = get_object_or_404(Character, pk=pk)
-    if character.player != request.user and not request.user.is_gm():
-        raise Http404
-    return render(request, 'CharSheet/character_tracker.html', {'c': character})
+def construct_hp_update(request, pk, schematic_pk):
+    character = get_object_or_404(Character, pk=pk, player=request.user)
+    schematic = get_object_or_404(
+        MakerSchematic, pk=schematic_pk, profile__character=character
+    )
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        try:
+            amount = int(request.POST.get('amount', 0))
+        except (ValueError, TypeError):
+            amount = 0
+        creator_intent = character.intent
+        max_hp = creator_intent * (schematic.body_tier + 1 + schematic.stability)
+        if action == 'damage' and amount > 0:
+            schematic.construct_current_hp = max(schematic.construct_current_hp - amount, -max_hp)
+        elif action == 'heal' and amount > 0:
+            schematic.construct_current_hp = min(schematic.construct_current_hp + amount, max_hp)
+        elif action == 'full_heal':
+            schematic.construct_current_hp = max_hp
+        schematic.save()
+    return redirect('character_detail', pk=character.pk)
 
 
 # ─────────────────────────────────────────────
@@ -757,3 +1224,67 @@ def _recalc_load(char):
         sum(c.weight * c.quantity for c in char.consumables.all())
     )
     Character.objects.filter(pk=char.pk).update(current_load=total)
+
+
+# --- Vehicles ---
+
+@login_required
+def vehicle_add(request, pk):
+    char = _get_owned_character(pk, request.user)
+    if request.method == 'POST':
+        form = VehicleItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.character = char
+            item.save()
+            return redirect('character_detail', pk=pk)
+    else:
+        form = VehicleItemForm()
+    return render(request, 'CharSheet/vehicle_form.html', {
+        'form': form, 'char': char, 'action': 'Adicionar',
+    })
+
+
+@login_required
+def vehicle_edit(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(VehicleItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        form = VehicleItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect('character_detail', pk=pk)
+    else:
+        form = VehicleItemForm(instance=item)
+    return render(request, 'CharSheet/vehicle_form.html', {
+        'form': form, 'char': char, 'action': 'Editar',
+    })
+
+
+@login_required
+def vehicle_delete(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    item = get_object_or_404(VehicleItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        item.delete()
+    return redirect('character_detail', pk=pk)
+
+
+@login_required
+def vehicle_hp_update(request, pk, item_pk):
+    char = _get_owned_character(pk, request.user)
+    vehicle = get_object_or_404(VehicleItem, pk=item_pk, character=char)
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        try:
+            amount = int(request.POST.get('amount', 0))
+        except (ValueError, TypeError):
+            amount = 0
+        if action == 'damage':
+            vehicle.current_hp = max(0, vehicle.current_hp - amount)
+        elif action == 'heal':
+            vehicle.current_hp = min(vehicle.max_hp, vehicle.current_hp + amount)
+        elif action == 'full_heal':
+            vehicle.current_hp = vehicle.max_hp
+        vehicle.save()
+    return redirect('character_detail', pk=pk)

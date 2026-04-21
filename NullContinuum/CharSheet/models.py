@@ -195,18 +195,22 @@ class Character(models.Model):
 
     @property
     def overstrain_tier(self):
-        """Retorna '' (limpo), 'OT I', 'OT II' ou 'OT III'."""
+        """Retorna '' (limpo), 'OT I', 'OT II' ou 'OT III'.
+        OT I:  strain > max_strain
+        OT II: strain >= max_strain × 1.5  (max_strain + max_strain/2)
+        OT III: strain >= max_strain × 2
+        """
         if self.nl_rank == 0 or self.max_strain == 0:
             return ''
-        overstrain = self.current_strain - self.max_strain
-        if overstrain <= 0:
-            return ''
-        r = overstrain / self.max_strain
-        if r <= 0.25:
-            return 'OT I'
-        if r <= 0.5:
+        s = self.current_strain
+        ms = self.max_strain
+        if s >= ms * 2:
+            return 'OT III'
+        if s >= ms * 3 // 2:
             return 'OT II'
-        return 'OT III'
+        if s > ms:
+            return 'OT I'
+        return ''
 
     @property
     def max_strain(self):
@@ -329,6 +333,11 @@ class WeaponItem(models.Model):
     crit_multiplier = models.PositiveIntegerField('Multiplicador de Crítico', default=2)
     range_hexes = models.PositiveIntegerField('Alcance (hexes)', default=1)
     ammo = models.PositiveIntegerField('Munição', null=True, blank=True, help_text='Deixe vazio para armas corpo-a-corpo')
+    is_nl = models.BooleanField('Não-Linear', default=False)
+    nl_constant = models.CharField('Continuity Constant', max_length=200, blank=True)
+    nl_passive = models.TextField('Passive Expressions', blank=True)
+    nl_active = models.TextField('Active Expressions', blank=True)
+    nl_condition_rules = models.TextField('Condition Rules', blank=True)
 
     class Meta:
         ordering = ['name']
@@ -354,6 +363,11 @@ class VestmentItem(models.Model):
     rd = models.IntegerField('RD', default=0)
     block_bonus = models.IntegerField('Bônus de Block', default=0)
     agi_penalty = models.IntegerField('Penalidade de AGI', default=0)
+    is_nl = models.BooleanField('Não-Linear', default=False)
+    nl_constant = models.CharField('Continuity Constant', max_length=200, blank=True)
+    nl_passive = models.TextField('Passive Expressions', blank=True)
+    nl_active = models.TextField('Active Expressions', blank=True)
+    nl_condition_rules = models.TextField('Condition Rules', blank=True)
 
     class Meta:
         ordering = ['name']
@@ -376,6 +390,11 @@ class ConsumableItem(models.Model):
     weight = models.PositiveIntegerField('Peso (slots)', default=1)
     quantity = models.PositiveIntegerField('Quantidade', default=1)
     effect = models.TextField('Efeito')
+    is_nl = models.BooleanField('Não-Linear', default=False)
+    nl_constant = models.CharField('Continuity Constant', max_length=200, blank=True)
+    nl_passive = models.TextField('Passive Expressions', blank=True)
+    nl_active = models.TextField('Active Expressions', blank=True)
+    nl_condition_rules = models.TextField('Condition Rules', blank=True)
 
     class Meta:
         ordering = ['name']
@@ -388,3 +407,287 @@ class ConsumableItem(models.Model):
     @property
     def total_weight(self):
         return self.weight * self.quantity
+
+
+# ─────────────────────────────────────────────
+#  VEÍCULOS
+# ─────────────────────────────────────────────
+
+VEHICLE_SIZE_CHOICES = [
+    ('BIKE',    'Bike'),
+    ('LIGHT',   'Light'),
+    ('MEDIUM',  'Medium'),
+    ('HEAVY',   'Heavy'),
+    ('MASSIVE', 'Massive'),
+]
+
+
+class VehicleItem(models.Model):
+    character = models.ForeignKey(
+        Character, on_delete=models.CASCADE, related_name='vehicles'
+    )
+    name = models.CharField('Nome', max_length=120)
+    size_tier = models.CharField('Size Tier', max_length=10, choices=VEHICLE_SIZE_CHOICES, default='LIGHT')
+    current_hp = models.IntegerField('HP Atual', default=0)
+    max_hp = models.PositiveIntegerField('HP Máximo', default=1)
+    armor_value = models.IntegerField('Armor Value', default=0)
+    speed = models.IntegerField('Speed', default=0)
+    handling = models.IntegerField('Handling', default=0)
+    seats = models.PositiveIntegerField('Assentos', default=1)
+    cargo_slots = models.PositiveIntegerField('Cargo Slots', default=0)
+    fuel_type = models.CharField('Tipo de Combustível', max_length=80, blank=True)
+    fuel_range = models.CharField('Alcance (combustível)', max_length=80, blank=True)
+    traits = models.TextField('Traits', blank=True)
+    is_nl = models.BooleanField('Não-Linear', default=False)
+    nl_constant = models.CharField('Continuity Constant', max_length=200, blank=True)
+    nl_passive = models.TextField('Passive Expressions', blank=True)
+    nl_active = models.TextField('Active Expressions', blank=True)
+    nl_condition_rules = models.TextField('Condition Rules', blank=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Veículo'
+        verbose_name_plural = 'Veículos'
+
+    def __str__(self):
+        return f"{self.name} ({self.character.name})"
+
+    @property
+    def damage_state(self):
+        if self.max_hp == 0 or self.current_hp <= 0:
+            return 'disabled'
+        ratio = self.current_hp / self.max_hp
+        if ratio <= 0.25:
+            return 'critical'
+        if ratio <= 0.5:
+            return 'damaged'
+        return 'normal'
+
+    @property
+    def hp_bar_pct(self):
+        if self.max_hp == 0:
+            return 0
+        return max(0, min(100, self.current_hp * 100 // self.max_hp))
+
+
+# ─────────────────────────────────────────────
+#  SHIFTER FRAME — Shift Builder
+# ─────────────────────────────────────────────
+
+class ShifterShift(models.Model):
+    character = models.OneToOneField(
+        Character, on_delete=models.CASCADE, related_name='shifter_shift'
+    )
+    name = models.CharField('Nome do Shift', max_length=120)
+    transform_strain = models.PositiveIntegerField('Custo de Transformação (Strain)', default=0)
+    transform_ap = models.PositiveIntegerField('Custo de Transformação (AP)', default=0)
+
+    def __str__(self):
+        return f"Shift de {self.character.name}: {self.name}"
+
+
+class ShiftPassive(models.Model):
+    shift = models.ForeignKey(ShifterShift, on_delete=models.CASCADE, related_name='passives')
+    description = models.TextField('Descrição')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+class ShiftActive(models.Model):
+    shift = models.ForeignKey(ShifterShift, on_delete=models.CASCADE, related_name='actives')
+    name = models.CharField('Nome', max_length=120)
+    damage_effect = models.CharField('Dano / Efeito', max_length=300)
+    range_hexes = models.PositiveIntegerField('Alcance (hexes)', default=1)
+    strain_cost = models.PositiveIntegerField('Custo em Strain', default=0)
+    duration = models.CharField('Duração', max_length=120)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+class ShiftCost(models.Model):
+    shift = models.ForeignKey(ShifterShift, on_delete=models.CASCADE, related_name='costs')
+    description = models.TextField('Descrição')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+# ─────────────────────────────────────────────
+#  CHANGER FRAME — Ability Builder
+# ─────────────────────────────────────────────
+
+class ChangerProfile(models.Model):
+    character = models.OneToOneField(
+        Character, on_delete=models.CASCADE, related_name='changer_profile'
+    )
+
+    def __str__(self):
+        return f"Changer Profile de {self.character.name}"
+
+
+class ChangerAbility(models.Model):
+    profile = models.ForeignKey(ChangerProfile, on_delete=models.CASCADE, related_name='abilities')
+    name = models.CharField('Nome', max_length=120)
+    damage_effect = models.CharField('Dano / Efeito', max_length=300)
+    range_hexes = models.PositiveIntegerField('Alcance (hexes)', default=1)
+    strain_cost = models.PositiveIntegerField('Custo em Strain', default=0)
+    duration = models.CharField('Duração', max_length=120)
+    restrictions = models.TextField('Restrictions', blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+# ─────────────────────────────────────────────
+#  MAKER FRAME — Schematic Builder
+# ─────────────────────────────────────────────
+
+MAKER_TYPE_CHOICES = [
+    ('STRUCTURE', 'Structure'),
+    ('EQUIPMENT', 'Equipment'),
+    ('CONSTRUCT', 'Construct'),
+    ('ZONE', 'Zone'),
+]
+
+EQUIPMENT_CATEGORY_CHOICES = [
+    ('WEAPON', 'Weapon'),
+    ('ARMOUR', 'Armour'),
+    ('CONSUMABLE', 'Consumable'),
+    ('NL_ENHANCEMENT', 'NL Enhancement'),
+]
+
+
+class MakerProfile(models.Model):
+    character = models.OneToOneField(
+        Character, on_delete=models.CASCADE, related_name='maker_profile'
+    )
+
+    def __str__(self):
+        return f"Maker Profile de {self.character.name}"
+
+
+class MakerSchematic(models.Model):
+    profile = models.ForeignKey(MakerProfile, on_delete=models.CASCADE, related_name='schematics')
+    name = models.CharField('Nome do Schematic', max_length=120)
+    construction_type = models.CharField('Tipo', max_length=12, choices=MAKER_TYPE_CHOICES)
+    extra_strain = models.PositiveIntegerField('Strain Extra (design)', default=0)
+    stability = models.PositiveIntegerField('Stability', default=0,
+                                            validators=[MaxValueValidator(3)])
+    use_strain = models.PositiveIntegerField('Custo de Uso (Strain)', default=0)
+    notes = models.TextField('Notas', blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    # ── Structure slots ──
+    cover_description = models.TextField('Cover', blank=True)
+    damage_description = models.TextField('Damage', blank=True)
+
+    # ── Equipment slots ──
+    equipment_category = models.CharField('Categoria', max_length=20,
+                                          choices=EQUIPMENT_CATEGORY_CHOICES, blank=True)
+    equipment_tier = models.PositiveIntegerField('Tier', default=1,
+                                                 validators=[MaxValueValidator(3)])
+    equipment_description = models.TextField('Descrição do Equipment', blank=True)
+    nl_enhancement_description = models.TextField('NL Enhancement', blank=True)
+
+    # ── Construct slots ──
+    body_tier = models.PositiveIntegerField('Body Tier', default=1,
+                                            validators=[MaxValueValidator(3)])
+    construct_pre = models.PositiveIntegerField('PRE', default=1, validators=[MaxValueValidator(3)])
+    construct_ins = models.PositiveIntegerField('INS', default=1, validators=[MaxValueValidator(3)])
+    construct_for = models.PositiveIntegerField('FOR', default=1, validators=[MaxValueValidator(3)])
+    construct_agi = models.PositiveIntegerField('AGI', default=1, validators=[MaxValueValidator(3)])
+    construct_current_hp = models.IntegerField('HP Atual do Construto', default=0)
+
+    # ── Zone slots ──
+    area_tier = models.PositiveIntegerField('Area Tier', default=1,
+                                            validators=[MaxValueValidator(3)])
+    zone_area_description = models.TextField('Área Description', blank=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_construction_type_display()})"
+
+
+class ConstructPassive(models.Model):
+    schematic = models.ForeignKey(MakerSchematic, on_delete=models.CASCADE, related_name='construct_passives')
+    description = models.TextField('Descrição')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+class ConstructActive(models.Model):
+    schematic = models.ForeignKey(MakerSchematic, on_delete=models.CASCADE, related_name='construct_actives')
+    description = models.TextField('Descrição')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+class ZoneEffect(models.Model):
+    schematic = models.ForeignKey(MakerSchematic, on_delete=models.CASCADE, related_name='zone_effects')
+    description = models.TextField('Descrição')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+# ─────────────────────────────────────────────
+#  LEAKER FRAME — Leak Builder
+# ─────────────────────────────────────────────
+
+class LeakerProfile(models.Model):
+    character = models.OneToOneField(
+        Character, on_delete=models.CASCADE, related_name='leaker_profile'
+    )
+
+    def __str__(self):
+        return f"Leaker Profile de {self.character.name}"
+
+
+class LeakerEmission(models.Model):
+    profile = models.ForeignKey(LeakerProfile, on_delete=models.CASCADE, related_name='emissions')
+    name = models.CharField('Nome', max_length=120)
+    description = models.TextField('Descrição')
+    radius = models.PositiveIntegerField(
+        'Raio (hexes)', null=True, blank=True,
+        help_text='Deixe em branco se o efeito é apenas sobre si mesmo'
+    )
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+class LeakerVolatility(models.Model):
+    profile = models.ForeignKey(LeakerProfile, on_delete=models.CASCADE, related_name='volatility_stages')
+    stage_label = models.CharField('Estágio', max_length=40)
+    description = models.TextField('Efeitos neste estágio')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+class LeakerBleed(models.Model):
+    profile = models.ForeignKey(LeakerProfile, on_delete=models.CASCADE, related_name='bleeds')
+    name = models.CharField('Nome', max_length=120)
+    effect = models.CharField('Dano / Efeito', max_length=300)
+    ap_cost = models.PositiveIntegerField('Custo em AP', default=1)
+    strain_info = models.CharField('Info de Strain', max_length=120, blank=True)
+    description = models.TextField('Notas adicionais', blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']

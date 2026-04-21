@@ -45,7 +45,9 @@
     </div>
 
     {# --- NL FEAT TREES --- #}
-    {% include 'CharSheet/_feat_trees_partial.html' with trees=nl_trees generals=nl_generals editable=True tab='nl' %}
+    <div class="nl-trees-wrap">
+        {% include 'CharSheet/_feat_trees_partial.html' with trees=nl_trees generals=nl_generals editable=True tab='nl' %}
+    </div>
 
     {# --- FINALIZAR --- #}
     <form method="post" class="form-actions" style="margin-top: 2rem;">

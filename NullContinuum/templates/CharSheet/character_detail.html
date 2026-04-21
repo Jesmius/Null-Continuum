@@ -14,7 +14,6 @@
             <a href="{% url 'rank_up' pk=c.pk %}" class="btn btn-rankup btn-sm">⬆ Rank Up</a>
             {% endif %}
             {% if c.player == user %}
-            <a href="{% url 'character_tracker' pk=c.pk %}" class="btn btn-tracker btn-sm">Combat Tracker</a>
             <a href="{% url 'character_edit' pk=c.pk %}" class="btn btn-secondary btn-sm">Editar Ficha</a>
             <a href="{% url 'character_delete' pk=c.pk %}" class="btn btn-danger btn-sm">Deletar</a>
             {% endif %}
@@ -22,442 +21,1028 @@
         </div>
     </div>
 
-    {# --- IDENTIDADE --- #}
-    <section class="sheet-section">
-        <h2 class="section-title">Identidade</h2>
-        <div class="stat-row">
-            <div class="stat-block">
-                <span class="stat-label">Jogador</span>
-                <span class="stat-value">{{ c.player.username }}</span>
+    {# ============================================================ #}
+    {# --- COMBAT STATUS (topo, colapsável, aberto por padrão)     #}
+    {# ============================================================ #}
+    <details class="sheet-collapse combat-status-collapse" open>
+        <summary class="sheet-collapse-summary">
+            <span>Combat Status</span>
+            <div class="combat-status-peek">
+                <span class="csp-item {% if c.current_hp <= 0 %}csp-danger{% elif c.current_hp < c.max_hp %}csp-warn{% endif %}">
+                    HP {{ c.current_hp }}/{{ c.max_hp }}
+                </span>
+                <span class="csp-item">AP {{ c.current_ap }}/3</span>
+                {% if c.nl_rank > 0 %}
+                <span class="csp-item {% if c.current_strain > c.max_strain %}csp-danger{% elif c.current_strain > 0 %}csp-warn{% endif %}">
+                    Strain {{ c.current_strain }}/{{ c.max_strain }}
+                </span>
+                {% endif %}
             </div>
-            <div class="stat-block">
-                <span class="stat-label">Background</span>
-                <span class="stat-value">{{ c.background_display }}</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-label">Base Rank</span>
-                <span class="stat-value">{{ c.base_rank }}</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-label">NL Rank</span>
-                <span class="stat-value">{{ c.nl_rank }}</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-label">Category</span>
-                <span class="stat-value">{{ c.category }}</span>
-            </div>
-        </div>
-        {% if c.continuity_constant %}
-        <div class="stat-row">
-            <div class="stat-block">
-                <span class="stat-label">Continuity Constant</span>
-                <span class="stat-value">{{ c.get_continuity_constant_display }}</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-label">Abstraction Frame</span>
-                <span class="stat-value">{{ c.get_abstraction_frame_display }}</span>
-            </div>
-        </div>
-        {% endif %}
-    </section>
+            <span class="sheet-collapse-chevron">▶</span>
+        </summary>
+        <div class="sheet-collapse-body">
+            <section class="sheet-section combat-status-section">
 
-    {# --- ATRIBUTOS --- #}
-    <section class="sheet-section">
-        <h2 class="section-title">Atributos</h2>
-        <div class="attr-grid">
-            <div class="attr-card">
-                <span class="attr-abbr">AGI</span>
-                <span class="attr-val">{{ c.agility }}</span>
-                <span class="attr-name">Agility</span>
-            </div>
-            <div class="attr-card">
-                <span class="attr-abbr">FOR</span>
-                <span class="attr-val">{{ c.fortitude }}</span>
-                <span class="attr-name">Fortitude</span>
-            </div>
-            <div class="attr-card">
-                <span class="attr-abbr">INS</span>
-                <span class="attr-val">{{ c.insight }}</span>
-                <span class="attr-name">Insight</span>
-            </div>
-            <div class="attr-card">
-                <span class="attr-abbr">PRE</span>
-                <span class="attr-val">{{ c.presence }}</span>
-                <span class="attr-name">Presence</span>
-            </div>
-            <div class="attr-card">
-                <span class="attr-abbr">STA</span>
-                <span class="attr-val">{{ c.stability }}</span>
-                <span class="attr-name">Stability</span>
-            </div>
-            <div class="attr-card">
-                <span class="attr-abbr">INT</span>
-                <span class="attr-val">{{ c.intent }}</span>
-                <span class="attr-name">Intent</span>
-            </div>
-        </div>
-        <div class="stat-row stat-row-small">
-            <span class="stat-inline">Stat Points usados: {{ c.stat_points_used }} / {{ c.stat_points_used|add:c.stat_points_available }}</span>
-        </div>
-    </section>
+                {# ── Overstrain Banner ── #}
+                {% if c.nl_rank > 0 and c.overstrain_tier %}
+                <div class="ot-alert ot-alert--{{ c.overstrain_tier|lower|cut:' ' }}" style="margin-bottom:1rem;">
+                    <strong class="ot-alert-tier">{{ c.overstrain_tier }}</strong>
+                    {% if c.overstrain_tier == 'OT I' %}
+                    <span class="ot-alert-desc">Redline — Higher Strain band auto · Backlash Check on every NL use · Move −1 hex</span>
+                    {% elif c.overstrain_tier == 'OT II' %}
+                    <span class="ot-alert-desc">Burning — As OT I · Move halved (min 1) · −1 die all checks</span>
+                    {% elif c.overstrain_tier == 'OT III' %}
+                    <span class="ot-alert-desc">Shattered — As OT II · −2 dice all checks · T3+ Backlash at Disadvantage</span>
+                    {% endif %}
+                </div>
+                {% endif %}
 
-    {# --- DERIVED STATS --- #}
-    <section class="sheet-section">
-        <h2 class="section-title">Estatísticas Derivadas</h2>
-        <div class="derived-grid">
-            <div class="derived-card">
-                <span class="derived-label">Max HP</span>
-                <span class="derived-val">{{ c.max_hp }}</span>
-                <span class="derived-formula">(FOR×2)×Rank+15</span>
-            </div>
-            <div class="derived-card">
-                <span class="derived-label">Passive Defense</span>
-                <span class="derived-val">{{ c.passive_defense }}</span>
-                <span class="derived-formula">10+AGI+Armadura+Escudo</span>
-            </div>
-            <div class="derived-card">
-                <span class="derived-label">Carry Capacity</span>
-                <span class="derived-val">{{ c.carry_capacity }}</span>
-                <span class="derived-formula">8+2×FOR</span>
-            </div>
-            <div class="derived-card">
-                <span class="derived-label">Carga Atual</span>
-                <span class="derived-val">{{ c.current_load }}</span>
-                <span class="derived-formula">{{ c.encumbrance }}</span>
-            </div>
-            <div class="derived-card">
-                <span class="derived-label">Base Move</span>
-                <span class="derived-val">3 hex</span>
-            </div>
-            <div class="derived-card">
-                <span class="derived-label">AP por Turno</span>
-                <span class="derived-val">3</span>
-            </div>
-        </div>
-    </section>
+                {# ── Stats display ── #}
+                <div class="cst-grid">
+                    <div class="cst-block">
+                        <span class="cst-label">HP</span>
+                        <span class="cst-value {% if c.current_hp <= 0 %}cst-danger{% elif c.current_hp < c.max_hp %}cst-warn{% endif %}">
+                            {{ c.current_hp }}{% if c.temp_hp > 0 %}+{{ c.temp_hp }}{% endif %}
+                        </span>
+                        <span class="cst-sub">/ {{ c.max_hp }}</span>
+                        <div class="cst-bar-track">
+                            <div class="cst-bar-fill {% if c.current_hp <= 0 %}cst-bar-danger{% elif c.current_hp < c.max_hp %}cst-bar-warn{% endif %}"
+                                 style="width:{% if c.current_hp >= c.max_hp %}100{% elif c.current_hp <= 0 %}0{% else %}{% widthratio c.current_hp c.max_hp 100 %}{% endif %}%"></div>
+                        </div>
+                    </div>
+                    <div class="cst-block">
+                        <span class="cst-label">AP</span>
+                        <span class="cst-value">{{ c.current_ap }}</span>
+                        <span class="cst-sub">/ 3</span>
+                        <div class="cst-pips">
+                            {% for i in "123" %}
+                            <div class="cst-pip {% if forloop.counter <= c.current_ap %}cst-pip-on{% endif %}"></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if c.nl_rank > 0 %}
+                    <div class="cst-block">
+                        <span class="cst-label">Strain</span>
+                        <span class="cst-value {% if c.current_strain > c.max_strain %}cst-danger{% elif c.current_strain > 0 %}cst-warn{% endif %}">
+                            {{ c.current_strain }}
+                        </span>
+                        <span class="cst-sub">/ {{ c.max_strain }}</span>
+                        <div class="cst-bar-track">
+                            <div class="cst-bar-fill cst-bar-nl {% if c.current_strain > c.max_strain %}cst-bar-danger{% endif %}"
+                                 style="width:{% if c.current_strain >= c.max_strain %}100{% elif c.current_strain <= 0 %}0{% else %}{% widthratio c.current_strain c.max_strain 100 %}{% endif %}%"></div>
+                        </div>
+                        {% if c.overstrain_tier %}
+                        <span class="nl-ot-pill nl-ot-pill--{% if c.overstrain_tier == 'OT I' %}oti{% elif c.overstrain_tier == 'OT II' %}otii{% else %}otiii{% endif %}" style="margin-top:4px;">
+                            {{ c.overstrain_tier }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <div class="cst-block cst-block-passive">
+                        <span class="cst-label">PD</span>
+                        <span class="cst-value">{{ c.passive_defense }}</span>
+                    </div>
+                    <div class="cst-block cst-block-passive">
+                        <span class="cst-label">Base Move</span>
+                        <span class="cst-value">3 hex</span>
+                    </div>
+                </div>
 
-    {# --- SKILLS --- #}
-    <section class="sheet-section">
-        <h2 class="section-title">Skills</h2>
-        <div class="skills-columns">
-            {% for cat_name, skills in skills_by_cat.items %}
-            <div class="skill-category">
-                <h3 class="skill-cat-title">{{ cat_name }}</h3>
-                <table class="skill-table">
-                    <thead>
-                        <tr>
-                            <th>Skill</th>
-                            <th>Rank</th>
-                            <th>Bônus</th>
-                        </tr>
-                    </thead>
+                {# ── Combat Controls (owner only) ── #}
+                {% if c.player == user %}
+                <div class="cst-controls-wrap">
+                    <div class="ct-actions">
+                        <span class="ct-set-label">HP</span>
+                        <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                            {% csrf_token %}<input type="hidden" name="action" value="damage">
+                            <input type="number" name="amount" min="1" value="1" class="ct-input">
+                            <button type="submit" class="btn btn-danger btn-sm">Dano</button>
+                        </form>
+                        <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                            {% csrf_token %}<input type="hidden" name="action" value="heal">
+                            <input type="number" name="amount" min="1" value="1" class="ct-input">
+                            <button type="submit" class="btn btn-heal btn-sm">Cura</button>
+                        </form>
+                        <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                            {% csrf_token %}<input type="hidden" name="action" value="temp_hp">
+                            <input type="number" name="amount" min="1" value="1" class="ct-input">
+                            <button type="submit" class="btn btn-secondary btn-sm">+Temp HP</button>
+                        </form>
+                        <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                            {% csrf_token %}<input type="hidden" name="action" value="full_heal">
+                            <button type="submit" class="btn btn-secondary btn-sm">Full Heal</button>
+                        </form>
+
+                        <div class="ct-ap-controls">
+                            <span class="ct-set-label">AP</span>
+                            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                                {% csrf_token %}<input type="hidden" name="action" value="ap_spend">
+                                <button type="submit" class="btn btn-danger btn-sm ct-ap-btn">−</button>
+                            </form>
+                            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                                {% csrf_token %}<input type="hidden" name="action" value="ap_gain">
+                                <button type="submit" class="btn btn-heal btn-sm ct-ap-btn">+</button>
+                            </form>
+                            <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                                {% csrf_token %}<input type="hidden" name="action" value="ap_reset">
+                                <button type="submit" class="btn btn-secondary btn-sm">Reset</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {% if c.nl_rank > 0 %}
+                    <div class="ct-actions ct-strain-row">
+                        <span class="ct-set-label" style="color:#a78bfa;">Strain</span>
+                        <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                            {% csrf_token %}<input type="hidden" name="action" value="strain_spend">
+                            <input type="number" name="amount" min="1" value="1" class="ct-input">
+                            <button type="submit" class="btn btn-strain btn-sm">+ Strain</button>
+                        </form>
+                        <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form">
+                            {% csrf_token %}<input type="hidden" name="action" value="strain_heal">
+                            <input type="number" name="amount" min="1" value="1" class="ct-input">
+                            <button type="submit" class="btn btn-heal btn-sm">− Strain</button>
+                        </form>
+                        <form method="post" action="{% url 'combat_quick_update' pk=c.pk %}" class="ct-form ct-form-inline">
+                            {% csrf_token %}<input type="hidden" name="action" value="strain_full_heal">
+                            <button type="submit" class="btn btn-secondary btn-sm">Limpar Strain</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </section>
+        </div>
+    </details>
+
+    {# ============================================================ #}
+    {# --- IDENTIDADE (sem colapso)                                 #}
+    {# ============================================================ #}
+    <div class="sheet-block">
+        <div class="sheet-block-title">Identidade</div>
+        <section class="sheet-section">
+            <div class="stat-row">
+                <div class="stat-block">
+                    <span class="stat-label">Jogador</span>
+                    <span class="stat-value">{{ c.player.username }}</span>
+                </div>
+                <div class="stat-block">
+                    <span class="stat-label">Background</span>
+                    <span class="stat-value">{{ c.background_display }}</span>
+                </div>
+                <div class="stat-block">
+                    <span class="stat-label">Base Rank</span>
+                    <span class="stat-value">{{ c.base_rank }}</span>
+                </div>
+                <div class="stat-block">
+                    <span class="stat-label">NL Rank</span>
+                    <span class="stat-value">{{ c.nl_rank }}</span>
+                </div>
+                <div class="stat-block">
+                    <span class="stat-label">Category</span>
+                    <span class="stat-value">{{ c.category }}</span>
+                </div>
+            </div>
+            {% if c.continuity_constant %}
+            <div class="stat-row">
+                <div class="stat-block">
+                    <span class="stat-label">Continuity Constant</span>
+                    <span class="stat-value">{{ c.get_continuity_constant_display }}</span>
+                </div>
+                <div class="stat-block">
+                    <span class="stat-label">Abstraction Frame</span>
+                    <span class="stat-value">{{ c.get_abstraction_frame_display }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    {# ============================================================ #}
+    {# --- ATRIBUTOS                                                #}
+    {# ============================================================ #}
+    <details class="sheet-collapse" open>
+        <summary class="sheet-collapse-summary">
+            <span>Atributos</span>
+            <div class="attr-peek">
+                <span>AGI {{ c.agility }}</span>
+                <span>FOR {{ c.fortitude }}</span>
+                <span>INS {{ c.insight }}</span>
+                <span>PRE {{ c.presence }}</span>
+                <span>STA {{ c.stability }}</span>
+                <span>INT {{ c.intent }}</span>
+            </div>
+            <span class="sheet-collapse-chevron">▶</span>
+        </summary>
+        <div class="sheet-collapse-body">
+            <section class="sheet-section">
+                <div class="attr-grid">
+                    <div class="attr-card">
+                        <span class="attr-abbr">AGI</span>
+                        <span class="attr-val">{{ c.agility }}</span>
+                        <span class="attr-name">Agility</span>
+                    </div>
+                    <div class="attr-card">
+                        <span class="attr-abbr">FOR</span>
+                        <span class="attr-val">{{ c.fortitude }}</span>
+                        <span class="attr-name">Fortitude</span>
+                    </div>
+                    <div class="attr-card">
+                        <span class="attr-abbr">INS</span>
+                        <span class="attr-val">{{ c.insight }}</span>
+                        <span class="attr-name">Insight</span>
+                    </div>
+                    <div class="attr-card">
+                        <span class="attr-abbr">PRE</span>
+                        <span class="attr-val">{{ c.presence }}</span>
+                        <span class="attr-name">Presence</span>
+                    </div>
+                    <div class="attr-card">
+                        <span class="attr-abbr">STA</span>
+                        <span class="attr-val">{{ c.stability }}</span>
+                        <span class="attr-name">Stability</span>
+                    </div>
+                    <div class="attr-card">
+                        <span class="attr-abbr">INT</span>
+                        <span class="attr-val">{{ c.intent }}</span>
+                        <span class="attr-name">Intent</span>
+                    </div>
+                </div>
+                <div class="stat-row stat-row-small">
+                    <span class="stat-inline">Stat Points usados: {{ c.stat_points_used }} / {{ c.stat_points_used|add:c.stat_points_available }}</span>
+                    <span class="stat-inline">Max HP: {{ c.max_hp }}</span>
+                    <span class="stat-inline">PD: {{ c.passive_defense }}</span>
+                    <span class="stat-inline">Carga: {{ c.current_load }}/{{ c.carry_capacity }} ({{ c.encumbrance }})</span>
+                </div>
+            </section>
+        </div>
+    </details>
+
+    {# ============================================================ #}
+    {# --- SKILLS                                                   #}
+    {# ============================================================ #}
+    <details class="skills-tab-details">
+        <summary class="skills-tab-summary">
+            <span class="skills-tab-title">Skills</span>
+            <span class="nl-tab-chevron">▶</span>
+        </summary>
+        <section class="sheet-section skills-tab-body">
+            <div class="skills-columns">
+                {% for cat_name, skills in skills_by_cat.items %}
+                <div class="skill-category">
+                    <h3 class="skill-cat-title">{{ cat_name }}</h3>
+                    <table class="skill-table">
+                        <thead>
+                            <tr>
+                                <th>Skill</th>
+                                <th>Rank</th>
+                                <th>Bônus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for skill_name, rank, bonus in skills %}
+                            <tr>
+                                <td>{{ skill_name }}</td>
+                                <td class="skill-rank skill-rank-{{ rank }}">{{ rank }}</td>
+                                <td class="skill-bonus">{{ bonus }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </details>
+
+    {# ============================================================ #}
+    {# --- FEATS (sem colapso — apenas botões de navegação)        #}
+    {# ============================================================ #}
+    <div class="sheet-block">
+        <div class="sheet-block-title">Feats</div>
+        <section class="sheet-section">
+            <div class="feat-links">
+                <a href="{% url 'character_feats' pk=c.pk tab='combat' %}" class="btn btn-secondary btn-inline">
+                    Combat Feats
+                </a>
+                <a href="{% url 'character_feats' pk=c.pk tab='operations' %}" class="btn btn-secondary btn-inline">
+                    Operations Feats
+                </a>
+            </div>
+        </section>
+    </div>
+
+    {# ============================================================ #}
+    {# --- PERFIL NL (aba colapsável)                              #}
+    {# ============================================================ #}
+    {% if c.nl_rank > 0 %}
+    <details class="nl-tab-details">
+        <summary class="nl-tab-summary">
+            <span class="nl-tab-title">Perfil Não-Linear</span>
+            <span class="nl-tab-meta">{{ c.get_abstraction_frame_display|default:"" }} — Categoria {{ c.category }}</span>
+            <span class="nl-tab-chevron">▶</span>
+        </summary>
+
+        <div class="nl-tab-body">
+        <section class="nl-profile-section">
+
+            <div class="nl-summary">
+                <div class="nl-card">
+                    <span class="nl-card-label">NL Rank</span>
+                    <span class="nl-card-value">{{ c.nl_rank }}</span>
+                    <span class="nl-card-sub">Categoria {{ c.category }}</span>
+                </div>
+                <div class="nl-card">
+                    <span class="nl-card-label">Continuity Constant</span>
+                    <span class="nl-card-value">{{ c.continuity_constant|default:"—" }}</span>
+                    <span class="nl-card-sub">{{ c.get_continuity_constant_display|default:"" }}</span>
+                </div>
+                <div class="nl-card">
+                    <span class="nl-card-label">Abstraction Frame</span>
+                    <span class="nl-card-value">{{ c.get_abstraction_frame_display|default:"—" }}</span>
+                </div>
+
+                <div class="nl-card nl-card--strain">
+                    <div class="nl-card-info">
+                        <span class="nl-card-label">Strain</span>
+                        <span class="nl-card-value {% if c.current_strain > c.max_strain %}nl-val-danger{% elif c.current_strain > 0 %}nl-val-warn{% endif %}">
+                            {{ c.current_strain }} <span class="nl-card-sub">/ {{ c.max_strain }}</span>
+                        </span>
+                        {% if c.overstrain_tier %}
+                        <span class="nl-ot-pill nl-ot-pill--{% if c.overstrain_tier == 'OT I' %}oti{% elif c.overstrain_tier == 'OT II' %}otii{% else %}otiii{% endif %}">
+                            {{ c.overstrain_tier }}
+                        </span>
+                        {% else %}
+                        <span class="nl-ot-pill nl-ot-pill--clean">Estável</span>
+                        {% endif %}
+                    </div>
+                    {% if c.max_strain > 0 %}
+                    <div class="nl-strain-bar-wrap">
+                        <div class="nl-strain-bar-track">
+                            <div class="nl-strain-bar-fill {% if c.current_strain > c.max_strain %}nl-strain-bar-fill--danger{% elif c.current_strain >= c.max_strain|add:"-1" %}nl-strain-bar-fill--warn{% endif %}"
+                                 style="width: {% if c.current_strain >= c.max_strain %}100{% else %}{% widthratio c.current_strain c.max_strain 100 %}{% endif %}%">
+                            </div>
+                        </div>
+                        <span class="nl-strain-numbers {% if c.current_strain > c.max_strain %}is-danger{% elif c.current_strain > 0 %}is-warn{% endif %}">
+                            {{ c.current_strain }} / {{ c.max_strain }}{% if c.overstrain_tier %} — {{ c.overstrain_tier }}{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ── SHIFTER ── #}
+            {% if c.abstraction_frame == 'SHIFTER' %}
+            <div class="shift-display">
+                <div class="shift-display-header">
+                    <h3 class="nl-feats-title" style="margin:0;">
+                        {% if shifter_shift %}{{ shifter_shift.name }}{% else %}Shift não configurado{% endif %}
+                    </h3>
+                    {% if shifter_shift %}
+                    <div class="shift-display-costs">
+                        <span class="shift-cost-pill">Ativação: {{ shifter_shift.transform_strain }} Strain</span>
+                        <span class="shift-cost-pill">{{ shifter_shift.transform_ap }} AP</span>
+                    </div>
+                    {% endif %}
+                    {% if c.player == user %}
+                    <a href="{% url 'character_create_shifter' pk=c.pk %}" class="btn btn-secondary btn-sm">
+                        {% if shifter_shift %}Editar Shift{% else %}Configurar Shift{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+                {% if shifter_shift %}
+                {% if shifter_shift.passives.all %}
+                <h4 class="shift-sub-title">Habilidades Passivas</h4>
+                <ul class="shift-passive-list">
+                    {% for p in shifter_shift.passives.all %}
+                    <li class="shift-passive-item">{{ p.description }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if shifter_shift.actives.all %}
+                <h4 class="shift-sub-title">Habilidades Ativas</h4>
+                <div class="inv-table-wrap">
+                <table class="inv-table shift-active-table">
+                    <thead><tr><th>Nome</th><th>Dano / Efeito</th><th>Range</th><th>Strain</th><th>Duração</th></tr></thead>
                     <tbody>
-                        {% for skill_name, rank, bonus in skills %}
+                        {% for a in shifter_shift.actives.all %}
                         <tr>
-                            <td>{{ skill_name }}</td>
-                            <td class="skill-rank skill-rank-{{ rank }}">{{ rank }}</td>
-                            <td class="skill-bonus">{{ bonus }}</td>
+                            <td>{{ a.name }}</td>
+                            <td class="inv-effect">{{ a.damage_effect }}</td>
+                            <td class="inv-num">{{ a.range_hexes }}hx</td>
+                            <td class="inv-num">{{ a.strain_cost }}</td>
+                            <td>{{ a.duration }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
+                {% endif %}
+                {% if shifter_shift.costs.all %}
+                <h4 class="shift-sub-title">Custos &amp; Drawbacks</h4>
+                <ul class="shift-cost-list">
+                    {% for cost in shifter_shift.costs.all %}
+                    <li class="shift-cost-item">{{ cost.description }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endif %}
             </div>
-            {% endfor %}
-        </div>
-    </section>
+            {% endif %}{# /SHIFTER #}
 
-    <section class="sheet-section">
-        <h2 class="section-title">Feats</h2>
-        <div class="feat-links">
-            <a href="{% url 'character_feats' pk=c.pk tab='combat' %}" class="btn btn-secondary btn-inline">
-                Combat Feats
-            </a>
-            <a href="{% url 'character_feats' pk=c.pk tab='operations' %}" class="btn btn-secondary btn-inline">
-                Operations Feats
-            </a>
-        </div>
-    </section>
-
-    {# ============================================================ #}
-    {# --- PERFIL NL ---                                            #}
-    {# ============================================================ #}
-    {% if c.nl_rank > 0 %}
-    <section class="sheet-section nl-profile-section">
-        <h2 class="section-title nl-section-title">Perfil Não-Linear</h2>
-
-        <div class="nl-summary">
-            <div class="nl-card">
-                <span class="nl-card-label">NL Rank</span>
-                <span class="nl-card-value">{{ c.nl_rank }}</span>
-                <span class="nl-card-sub">Categoria {{ c.category }}</span>
-            </div>
-            <div class="nl-card">
-                <span class="nl-card-label">Continuity Constant</span>
-                <span class="nl-card-value">{{ c.continuity_constant|default:"—" }}</span>
-                <span class="nl-card-sub">{{ c.get_continuity_constant_display|default:"" }}</span>
-            </div>
-            <div class="nl-card">
-                <span class="nl-card-label">Abstraction Frame</span>
-                <span class="nl-card-value">{{ c.get_abstraction_frame_display|default:"—" }}</span>
-            </div>
-
-            {# Strain bar card #}
-            <div class="nl-card nl-card--strain">
-                <div class="nl-card-info">
-                    <span class="nl-card-label">Strain</span>
-                    <span class="nl-card-value {% if c.current_strain > c.max_strain %}nl-val-danger{% elif c.current_strain > 0 %}nl-val-warn{% endif %}">
-                        {{ c.current_strain }} <span class="nl-card-sub">/ {{ c.max_strain }}</span>
-                    </span>
-                    {% if c.overstrain_tier %}
-                    <span class="nl-ot-pill nl-ot-pill--{% if c.overstrain_tier == 'OT I' %}oti{% elif c.overstrain_tier == 'OT II' %}otii{% else %}otiii{% endif %}">
-                        {{ c.overstrain_tier }}
-                    </span>
-                    {% else %}
-                    <span class="nl-ot-pill nl-ot-pill--clean">Estável</span>
+            {# ── CHANGER ── #}
+            {% if c.abstraction_frame == 'CHANGER' %}
+            <div class="shift-display">
+                <div class="shift-display-header">
+                    <h3 class="nl-feats-title" style="margin:0;">Assertions</h3>
+                    {% if c.player == user %}
+                    <a href="{% url 'character_create_changer' pk=c.pk %}" class="btn btn-secondary btn-sm">
+                        {% if changer_profile %}Editar Assertions{% else %}Configurar Assertions{% endif %}
+                    </a>
                     {% endif %}
                 </div>
-                {% if c.max_strain > 0 %}
-                <div class="nl-strain-bar-wrap">
-                    <div class="nl-strain-bar-track">
-                        <div class="nl-strain-bar-fill {% if c.current_strain > c.max_strain %}nl-strain-bar-fill--danger{% elif c.current_strain >= c.max_strain|add:"-1" %}nl-strain-bar-fill--warn{% endif %}"
-                             style="width: {% if c.current_strain >= c.max_strain %}100{% else %}{% widthratio c.current_strain c.max_strain 100 %}{% endif %}%">
+                {% if changer_profile and changer_profile.abilities.all %}
+                <div class="inv-table-wrap">
+                <table class="inv-table shift-active-table changer-table">
+                    <thead><tr><th>Nome</th><th>Dano / Efeito</th><th>Range</th><th>Strain</th><th>Duração</th><th>Restrictions</th></tr></thead>
+                    <tbody>
+                        {% for a in changer_profile.abilities.all %}
+                        <tr>
+                            <td>{{ a.name }}</td>
+                            <td class="inv-effect">{{ a.damage_effect }}</td>
+                            <td class="inv-num">{{ a.range_hexes }}hx</td>
+                            <td class="inv-num">{{ a.strain_cost }}</td>
+                            <td>{{ a.duration }}</td>
+                            <td class="changer-restrictions-cell">{{ a.restrictions|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                {% else %}
+                <p class="inv-empty" style="padding: 0.5rem 1rem;">
+                    {% if changer_profile %}Nenhuma Assertion cadastrada.{% else %}Assertions não configuradas.{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}{# /CHANGER #}
+
+            {# ── MAKER ── #}
+            {% if c.abstraction_frame == 'MAKER' %}
+            <div class="shift-display">
+                <div class="shift-display-header">
+                    <h3 class="nl-feats-title" style="margin:0;">Schematics</h3>
+                    {% if c.player == user %}
+                    <a href="{% url 'character_create_maker' pk=c.pk %}" class="btn btn-secondary btn-sm">
+                        {% if maker_profile %}Editar Schematics{% else %}Configurar Schematics{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+                {% if maker_schematics %}
+                    {% for entry in maker_schematics %}
+                    {% with s=entry.s max_hp=entry.construct_max_hp %}
+                    <div class="maker-schematic-card">
+                        <div class="maker-schematic-header">
+                            <span class="maker-schematic-name">{{ s.name }}</span>
+                            <span class="maker-type-badge maker-type-{{ s.construction_type|lower }}">{{ s.get_construction_type_display }}</span>
+                            {% if s.use_strain > 0 %}
+                            <span class="shift-cost-pill">{{ s.use_strain }} Strain</span>
+                            {% endif %}
+                            {% if s.extra_strain > 0 %}
+                            <span class="shift-cost-pill">+{{ s.extra_strain }} Strain extra</span>
+                            {% endif %}
+                            <span class="shift-cost-pill">Stability {{ s.stability }}</span>
                         </div>
+
+                        {% if s.construction_type == 'STRUCTURE' %}
+                            {% if s.cover_description %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">Cover</span><span class="maker-slot-desc">{{ s.cover_description }}</span></div>
+                            {% endif %}
+                            {% if s.damage_description %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">Damage</span><span class="maker-slot-desc">{{ s.damage_description }}</span></div>
+                            {% endif %}
+
+                        {% elif s.construction_type == 'EQUIPMENT' %}
+                            {% if s.equipment_category %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">{{ s.get_equipment_category_display }} (Tier {{ s.equipment_tier }})</span><span class="maker-slot-desc">{{ s.equipment_description }}</span></div>
+                            {% endif %}
+                            {% if s.nl_enhancement_description %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">NL Enhancement</span><span class="maker-slot-desc">{{ s.nl_enhancement_description }}</span></div>
+                            {% endif %}
+
+                        {% elif s.construction_type == 'CONSTRUCT' %}
+                            <div class="maker-slot-row">
+                                <span class="maker-slot-label">Body Tier {{ s.body_tier }}</span>
+                                <span class="maker-slot-desc">
+                                    <span class="construct-stat-row">
+                                        <span class="construct-stat"><b>PRE</b> {{ s.construct_pre }}</span>
+                                        <span class="construct-stat"><b>INS</b> {{ s.construct_ins }}</span>
+                                        <span class="construct-stat"><b>FOR</b> {{ s.construct_for }}</span>
+                                        <span class="construct-stat"><b>AGI</b> {{ s.construct_agi }}</span>
+                                    </span>
+                                </span>
+                            </div>
+                            {# HP tracking #}
+                            <div class="maker-slot-row construct-hp-row">
+                                <span class="maker-slot-label">HP</span>
+                                <div class="construct-hp-display">
+                                    <span class="construct-hp-current {% if s.construct_current_hp <= 0 %}cst-danger{% endif %}">{{ s.construct_current_hp }}</span>
+                                    <span class="construct-hp-max">/ {{ max_hp }}</span>
+                                    {% if c.player == user %}
+                                    <div class="construct-hp-controls">
+                                        <form method="post" action="{% url 'construct_hp_update' pk=c.pk schematic_pk=s.pk %}" class="ct-form">
+                                            {% csrf_token %}<input type="hidden" name="action" value="damage">
+                                            <input type="number" name="amount" min="1" value="1" class="ct-input">
+                                            <button type="submit" class="btn btn-danger btn-sm">Dano</button>
+                                        </form>
+                                        <form method="post" action="{% url 'construct_hp_update' pk=c.pk schematic_pk=s.pk %}" class="ct-form">
+                                            {% csrf_token %}<input type="hidden" name="action" value="heal">
+                                            <input type="number" name="amount" min="1" value="1" class="ct-input">
+                                            <button type="submit" class="btn btn-heal btn-sm">Cura</button>
+                                        </form>
+                                        <form method="post" action="{% url 'construct_hp_update' pk=c.pk schematic_pk=s.pk %}" class="ct-form ct-form-inline">
+                                            {% csrf_token %}<input type="hidden" name="action" value="full_heal">
+                                            <button type="submit" class="btn btn-secondary btn-sm">Full Heal</button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if s.construct_passives.all %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">Passives</span>
+                                <ul class="maker-sub-list">{% for p in s.construct_passives.all %}<li>{{ p.description }}</li>{% endfor %}</ul>
+                            </div>
+                            {% endif %}
+                            {% if s.construct_actives.all %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">Actives</span>
+                                <ul class="maker-sub-list">{% for a in s.construct_actives.all %}<li>{{ a.description }}</li>{% endfor %}</ul>
+                            </div>
+                            {% endif %}
+
+                        {% elif s.construction_type == 'ZONE' %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">Área (Tier {{ s.area_tier }})</span><span class="maker-slot-desc">{{ s.zone_area_description }}</span></div>
+                            {% if s.zone_effects.all %}
+                            <div class="maker-slot-row"><span class="maker-slot-label">Effects</span>
+                                <ul class="maker-sub-list">{% for e in s.zone_effects.all %}<li>{{ e.description }}</li>{% endfor %}</ul>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if s.notes %}
+                        <div class="maker-slot-row maker-notes-row"><span class="maker-slot-desc maker-notes">{{ s.notes }}</span></div>
+                        {% endif %}
                     </div>
-                    <span class="nl-strain-numbers {% if c.current_strain > c.max_strain %}is-danger{% elif c.current_strain > 0 %}is-warn{% endif %}">
-                        {{ c.current_strain }} / {{ c.max_strain }}{% if c.overstrain_tier %} — {{ c.overstrain_tier }}{% endif %}
-                    </span>
-                </div>
+                    {% endwith %}
+                    {% endfor %}
+                {% else %}
+                <p class="inv-empty" style="padding: 0.5rem 1rem;">
+                    {% if maker_profile %}Nenhum Schematic cadastrado.{% else %}Schematics não configurados.{% endif %}
+                </p>
                 {% endif %}
             </div>
-        </div>
+            {% endif %}{# /MAKER #}
 
-        <h3 class="nl-feats-title">NL Feats</h3>
-        <div class="nl-trees-wrap">
-            {% include 'CharSheet/_feat_trees_partial.html' with trees=nl_trees generals=nl_generals editable=False tab='nl' %}
+            {# ── LEAKER ── #}
+            {% if c.abstraction_frame == 'LEAKER' %}
+            <div class="shift-display">
+                <div class="shift-display-header">
+                    <h3 class="nl-feats-title" style="margin:0;">O Leak</h3>
+                    {% if c.player == user %}
+                    <a href="{% url 'character_create_leaker' pk=c.pk %}" class="btn btn-secondary btn-sm">
+                        {% if leaker_profile %}Editar Leak{% else %}Configurar Leak{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+
+                {% if leaker_profile %}
+
+                {# Emissions #}
+                {% if leaker_profile.emissions.all %}
+                <h4 class="shift-sub-title">Emissions <span class="leaker-section-badge">(sempre ativas)</span></h4>
+                <div class="leaker-emissions-list">
+                    {% for e in leaker_profile.emissions.all %}
+                    <div class="leaker-emission-card">
+                        <div class="leaker-emission-header">
+                            <span class="leaker-emission-name">{{ e.name }}</span>
+                            {% if e.radius is not None %}
+                            <span class="shift-cost-pill">Raio {{ e.radius }} hex</span>
+                            {% else %}
+                            <span class="shift-cost-pill leaker-self-pill">Auto</span>
+                            {% endif %}
+                        </div>
+                        <p class="leaker-emission-desc">{{ e.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Volatility #}
+                {% if leaker_profile.volatility_stages.all %}
+                <h4 class="shift-sub-title">Volatility <span class="leaker-section-badge">(upgrades por Overstrain)</span></h4>
+                <div class="leaker-vol-list">
+                    {% for v in leaker_profile.volatility_stages.all %}
+                    <div class="leaker-vol-card">
+                        <span class="leaker-vol-badge leaker-vol-badge--{{ v.stage_label|lower|cut:' '|cut:'%' }}">{{ v.stage_label }}</span>
+                        <p class="leaker-vol-desc">{{ v.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {# Bleeds #}
+                {% if leaker_profile.bleeds.all %}
+                <h4 class="shift-sub-title">Bleeds <span class="leaker-section-badge">(habilidades ativas)</span></h4>
+                <div class="inv-table-wrap">
+                <table class="inv-table shift-active-table">
+                    <thead><tr><th>Nome</th><th>Dano / Efeito</th><th>AP</th><th>Strain</th><th>Notas</th></tr></thead>
+                    <tbody>
+                        {% for b in leaker_profile.bleeds.all %}
+                        <tr>
+                            <td>{{ b.name }}</td>
+                            <td class="inv-effect">{{ b.effect }}</td>
+                            <td class="inv-num">{{ b.ap_cost }}</td>
+                            <td class="inv-num leaker-strain-cell">{{ b.strain_info|default:"—" }}</td>
+                            <td class="leaker-notes-cell">{{ b.description|default:"" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <p class="inv-empty" style="padding: 0.5rem 1rem;">Leak não configurado.</p>
+                {% endif %}
+            </div>
+            {% endif %}{# /LEAKER #}
+
+            <h3 class="nl-feats-title">NL Feats</h3>
+            <div class="nl-trees-wrap">
+                {% include 'CharSheet/_feat_trees_partial.html' with trees=nl_trees generals=nl_generals editable=False tab='nl' %}
+            </div>
+        </section>
         </div>
-    </section>
+    </details>
     {% endif %}
-    
-    <section class="sheet-section">
-    <h2 class="section-title">Traits</h2>
 
-        {% if background_traits %}
-        <div class="traits-block traits-block-background">
-            <h3 class="traits-block-title">Background Trait</h3>
-            {% for trait in background_traits %}
-            <div class="trait-display trait-display-background">
-                <div class="trait-header">
-                    <span class="trait-name">{{ trait.name }}</span>
-                    <span class="trait-badge trait-badge-background">Background</span>
-                </div>
-                <p class="trait-desc">{{ trait.description }}</p>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if positive_traits %}
-        <div class="traits-block">
-            <h3 class="traits-block-title">Positive Traits</h3>
-            {% for trait in positive_traits %}
-            <div class="trait-display trait-display-positive">
-                <div class="trait-header">
-                    <span class="trait-name">{{ trait.name }}</span>
-                    <span class="trait-badge trait-badge-positive">−{{ trait.cost }} TP</span>
-                </div>
-                <p class="trait-desc">{{ trait.description }}</p>
-            </div>
-        {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if negative_traits %}
-        <div class="traits-block">
-            <h3 class="traits-block-title">Negative Traits</h3>
-            {% for trait in negative_traits %}
-            <div class="trait-display trait-display-negative">
-                <div class="trait-header">
-                    <span class="trait-name">{{ trait.name }}</span>
-                    <span class="trait-badge trait-badge-negative">+{{ trait.cost|stringformat:"+d"|slice:"1:" }} TP</span>
-                </div>
-                <p class="trait-desc">{{ trait.description }}</p>
-                </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </section>
-    
-    {# --- INVENTÁRIO --- #}
-    <section class="sheet-section">
-        <h2 class="section-title">
-            Inventário
-            <span class="inv-load-badge">
-                Carga: {{ c.current_load }} / {{ c.carry_capacity }}
-                <span class="inv-enc inv-enc-{{ c.encumbrance|lower }}">{{ c.encumbrance }}</span>
-            </span>
-        </h2>
-
-        {# Armas #}
-        <div class="inv-category">
-            <div class="inv-category-header">
-                <h3 class="inv-category-title">Armas</h3>
-                {% if c.player == user %}
-                <a href="{% url 'weapon_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar</a>
-                {% endif %}
-            </div>
-            {% if weapons %}
-            <div class="inv-table-wrap">
-            <table class="inv-table">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Dano</th>
-                        <th>Acerto</th>
-                        <th>Crítico</th>
-                        <th>×Crit</th>
-                        <th>Alcance</th>
-                        <th>Munição</th>
-                        <th>Peso</th>
-                        <th>Qtd</th>
-                        {% if c.player == user %}<th></th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for w in weapons %}
-                    <tr>
-                        <td>{{ w.name }}</td>
-                        <td class="inv-mono">{{ w.damage }}</td>
-                        <td class="inv-mono">{% if w.hit_bonus >= 0 %}+{% endif %}{{ w.hit_bonus }}</td>
-                        <td class="inv-mono">{{ w.crit_range }}–20</td>
-                        <td class="inv-mono">×{{ w.crit_multiplier }}</td>
-                        <td class="inv-num">{{ w.range_hexes }}hx</td>
-                        <td class="inv-num">{% if w.ammo is not None %}{{ w.ammo }}{% else %}—{% endif %}</td>
-                        <td class="inv-num">{{ w.weight }}</td>
-                        <td class="inv-num">{{ w.quantity }}</td>
-                        {% if c.player == user %}
-                        <td class="inv-actions">
-                            <a href="{% url 'weapon_edit' pk=c.pk item_pk=w.pk %}" class="inv-btn-edit">Editar</a>
-                            <form method="post" action="{% url 'weapon_delete' pk=c.pk item_pk=w.pk %}" class="inv-delete-form">
-                                {% csrf_token %}
-                                <button type="submit" class="inv-btn-delete">✕</button>
-                            </form>
-                        </td>
-                        {% endif %}
-                    </tr>
+    {# ============================================================ #}
+    {# --- TRAITS                                                   #}
+    {# ============================================================ #}
+    <details class="sheet-collapse">
+        <summary class="sheet-collapse-summary">
+            <span>Traits</span>
+            <span class="sheet-collapse-chevron">▶</span>
+        </summary>
+        <div class="sheet-collapse-body">
+            <section class="sheet-section">
+                {% if background_traits %}
+                <div class="traits-block traits-block-background">
+                    <h3 class="traits-block-title">Background Trait</h3>
+                    {% for trait in background_traits %}
+                    <div class="trait-display trait-display-background">
+                        <div class="trait-header">
+                            <span class="trait-name">{{ trait.name }}</span>
+                            <span class="trait-badge trait-badge-background">Background</span>
+                        </div>
+                        <p class="trait-desc">{{ trait.description }}</p>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-            </div>
-            {% else %}
-            <p class="inv-empty">Nenhuma arma cadastrada.</p>
-            {% endif %}
-        </div>
-
-        {# Vestimentas / Escudos #}
-        <div class="inv-category">
-            <div class="inv-category-header">
-                <h3 class="inv-category-title">Vestimentas / Escudos</h3>
-                {% if c.player == user %}
-                <a href="{% url 'vestment_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar</a>
+                </div>
                 {% endif %}
-            </div>
-            {% if vestments %}
-            <div class="inv-table-wrap">
-            <table class="inv-table">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Bônus PD</th>
-                        <th>RD</th>
-                        <th>Block</th>
-                        <th>Pen. AGI</th>
-                        <th>Peso</th>
-                        <th>Qtd</th>
-                        {% if c.player == user %}<th></th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for v in vestments %}
-                    <tr>
-                        <td>{{ v.name }}</td>
-                        <td class="inv-mono">{% if v.pd_bonus >= 0 %}+{% endif %}{{ v.pd_bonus }}</td>
-                        <td class="inv-mono">{{ v.rd }}</td>
-                        <td class="inv-mono">{% if v.block_bonus >= 0 %}+{% endif %}{{ v.block_bonus }}</td>
-                        <td class="inv-mono">{% if v.agi_penalty != 0 %}−{{ v.agi_penalty|abs }}{% else %}—{% endif %}</td>
-                        <td class="inv-num">{{ v.weight }}</td>
-                        <td class="inv-num">{{ v.quantity }}</td>
-                        {% if c.player == user %}
-                        <td class="inv-actions">
-                            <a href="{% url 'vestment_edit' pk=c.pk item_pk=v.pk %}" class="inv-btn-edit">Editar</a>
-                            <form method="post" action="{% url 'vestment_delete' pk=c.pk item_pk=v.pk %}" class="inv-delete-form">
-                                {% csrf_token %}
-                                <button type="submit" class="inv-btn-delete">✕</button>
-                            </form>
-                        </td>
-                        {% endif %}
-                    </tr>
+                {% if positive_traits %}
+                <div class="traits-block">
+                    <h3 class="traits-block-title">Positive Traits</h3>
+                    {% for trait in positive_traits %}
+                    <div class="trait-display trait-display-positive">
+                        <div class="trait-header">
+                            <span class="trait-name">{{ trait.name }}</span>
+                            <span class="trait-badge trait-badge-positive">−{{ trait.cost }} TP</span>
+                        </div>
+                        <p class="trait-desc">{{ trait.description }}</p>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-            </div>
-            {% else %}
-            <p class="inv-empty">Nenhuma vestimenta ou escudo cadastrado.</p>
-            {% endif %}
-        </div>
-
-        {# Consumíveis #}
-        <div class="inv-category">
-            <div class="inv-category-header">
-                <h3 class="inv-category-title">Consumíveis</h3>
-                {% if c.player == user %}
-                <a href="{% url 'consumable_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar</a>
+                </div>
                 {% endif %}
-            </div>
-            {% if consumables %}
-            <div class="inv-table-wrap">
-            <table class="inv-table">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Efeito</th>
-                        <th>Peso</th>
-                        <th>Qtd</th>
-                        {% if c.player == user %}<th></th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for con in consumables %}
-                    <tr>
-                        <td>{{ con.name }}</td>
-                        <td class="inv-effect">{{ con.effect }}</td>
-                        <td class="inv-num">{{ con.weight }}</td>
-                        <td class="inv-num">{{ con.quantity }}</td>
-                        {% if c.player == user %}
-                        <td class="inv-actions">
-                            <a href="{% url 'consumable_edit' pk=c.pk item_pk=con.pk %}" class="inv-btn-edit">Editar</a>
-                            <form method="post" action="{% url 'consumable_delete' pk=c.pk item_pk=con.pk %}" class="inv-delete-form">
-                                {% csrf_token %}
-                                <button type="submit" class="inv-btn-delete">✕</button>
-                            </form>
-                        </td>
-                        {% endif %}
-                    </tr>
+                {% if negative_traits %}
+                <div class="traits-block">
+                    <h3 class="traits-block-title">Negative Traits</h3>
+                    {% for trait in negative_traits %}
+                    <div class="trait-display trait-display-negative">
+                        <div class="trait-header">
+                            <span class="trait-name">{{ trait.name }}</span>
+                            <span class="trait-badge trait-badge-negative">+{{ trait.cost|stringformat:"+d"|slice:"1:" }} TP</span>
+                        </div>
+                        <p class="trait-desc">{{ trait.description }}</p>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-            </div>
-            {% else %}
-            <p class="inv-empty">Nenhum consumível cadastrado.</p>
-            {% endif %}
+                </div>
+                {% endif %}
+            </section>
         </div>
-    </section>
+    </details>
 
-    {# --- NOTAS --- #}
+    {# ============================================================ #}
+    {# --- INVENTÁRIO                                               #}
+    {# ============================================================ #}
+    <details class="sheet-collapse">
+        <summary class="sheet-collapse-summary">
+            <span>Inventário</span>
+            <span class="inv-load-inline">Carga: {{ c.current_load }}/{{ c.carry_capacity }} — {{ c.encumbrance }}</span>
+            <span class="sheet-collapse-chevron">▶</span>
+        </summary>
+        <div class="sheet-collapse-body">
+            <section class="sheet-section">
+
+                {# Armas #}
+                <div class="inv-category">
+                    <div class="inv-category-header">
+                        <h3 class="inv-category-title">Armas</h3>
+                        {% if c.player == user %}
+                        <a href="{% url 'weapon_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar</a>
+                        {% endif %}
+                    </div>
+                    {% if weapons %}
+                    <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr>
+                            <th>Nome</th><th>Dano</th><th>Acerto</th><th>Crítico</th><th>×Crit</th>
+                            <th>Alcance</th><th>Munição</th><th>Peso</th><th>Qtd</th>
+                            {% if c.player == user %}<th></th>{% endif %}
+                        </tr></thead>
+                        <tbody>
+                            {% for w in weapons %}
+                            <tr>
+                                <td>{{ w.name }}{% if w.is_nl %} <span class="nl-badge">NL</span>{% endif %}</td>
+                                <td class="inv-mono">{{ w.damage }}</td>
+                                <td class="inv-mono">{% if w.hit_bonus >= 0 %}+{% endif %}{{ w.hit_bonus }}</td>
+                                <td class="inv-mono">{{ w.crit_range }}–20</td>
+                                <td class="inv-mono">×{{ w.crit_multiplier }}</td>
+                                <td class="inv-num">{{ w.range_hexes }}hx</td>
+                                <td class="inv-num">{% if w.ammo is not None %}{{ w.ammo }}{% else %}—{% endif %}</td>
+                                <td class="inv-num">{{ w.weight }}</td>
+                                <td class="inv-num">{{ w.quantity }}</td>
+                                {% if c.player == user %}
+                                <td class="inv-actions">
+                                    <a href="{% url 'weapon_edit' pk=c.pk item_pk=w.pk %}" class="inv-btn-edit">Editar</a>
+                                    <form method="post" action="{% url 'weapon_delete' pk=c.pk item_pk=w.pk %}" class="inv-delete-form">
+                                        {% csrf_token %}<button type="submit" class="inv-btn-delete">✕</button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% if w.is_nl %}
+                            <tr class="nl-imprint-row">
+                                <td colspan="{% if c.player == user %}10{% else %}9{% endif %}">
+                                    <details class="nl-imprint-details">
+                                        <summary class="nl-imprint-summary">Imprint NL — {{ w.name }}</summary>
+                                        <div class="nl-imprint-body">
+                                            {% if w.nl_constant %}<p><strong>Continuity Constant:</strong> {{ w.nl_constant }}</p>{% endif %}
+                                            {% if w.nl_passive %}<p><strong>Passive Expressions:</strong> {{ w.nl_passive }}</p>{% endif %}
+                                            {% if w.nl_active %}<p><strong>Active Expressions:</strong> {{ w.nl_active }}</p>{% endif %}
+                                            {% if w.nl_condition_rules %}<p><strong>Condition Rules:</strong> {{ w.nl_condition_rules }}</p>{% endif %}
+                                        </div>
+                                    </details>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                    {% else %}
+                    <p class="inv-empty">Nenhuma arma cadastrada.</p>
+                    {% endif %}
+                </div>
+
+                {# Vestimentas / Escudos #}
+                <div class="inv-category">
+                    <div class="inv-category-header">
+                        <h3 class="inv-category-title">Vestimentas / Escudos</h3>
+                        {% if c.player == user %}
+                        <a href="{% url 'vestment_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar</a>
+                        {% endif %}
+                    </div>
+                    {% if vestments %}
+                    <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr>
+                            <th>Nome</th><th>Bônus PD</th><th>RD</th><th>Block</th><th>Pen. AGI</th><th>Peso</th><th>Qtd</th>
+                            {% if c.player == user %}<th></th>{% endif %}
+                        </tr></thead>
+                        <tbody>
+                            {% for v in vestments %}
+                            <tr>
+                                <td>{{ v.name }}{% if v.is_nl %} <span class="nl-badge">NL</span>{% endif %}</td>
+                                <td class="inv-mono">{% if v.pd_bonus >= 0 %}+{% endif %}{{ v.pd_bonus }}</td>
+                                <td class="inv-mono">{{ v.rd }}</td>
+                                <td class="inv-mono">{% if v.block_bonus >= 0 %}+{% endif %}{{ v.block_bonus }}</td>
+                                <td class="inv-mono">{% if v.agi_penalty != 0 %}−{{ v.agi_penalty|abs }}{% else %}—{% endif %}</td>
+                                <td class="inv-num">{{ v.weight }}</td>
+                                <td class="inv-num">{{ v.quantity }}</td>
+                                {% if c.player == user %}
+                                <td class="inv-actions">
+                                    <a href="{% url 'vestment_edit' pk=c.pk item_pk=v.pk %}" class="inv-btn-edit">Editar</a>
+                                    <form method="post" action="{% url 'vestment_delete' pk=c.pk item_pk=v.pk %}" class="inv-delete-form">
+                                        {% csrf_token %}<button type="submit" class="inv-btn-delete">✕</button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% if v.is_nl %}
+                            <tr class="nl-imprint-row">
+                                <td colspan="{% if c.player == user %}8{% else %}7{% endif %}">
+                                    <details class="nl-imprint-details">
+                                        <summary class="nl-imprint-summary">Imprint NL — {{ v.name }}</summary>
+                                        <div class="nl-imprint-body">
+                                            {% if v.nl_constant %}<p><strong>Continuity Constant:</strong> {{ v.nl_constant }}</p>{% endif %}
+                                            {% if v.nl_passive %}<p><strong>Passive Expressions:</strong> {{ v.nl_passive }}</p>{% endif %}
+                                            {% if v.nl_active %}<p><strong>Active Expressions:</strong> {{ v.nl_active }}</p>{% endif %}
+                                            {% if v.nl_condition_rules %}<p><strong>Condition Rules:</strong> {{ v.nl_condition_rules }}</p>{% endif %}
+                                        </div>
+                                    </details>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                    {% else %}
+                    <p class="inv-empty">Nenhuma vestimenta ou escudo cadastrado.</p>
+                    {% endif %}
+                </div>
+
+                {# Consumíveis #}
+                <div class="inv-category">
+                    <div class="inv-category-header">
+                        <h3 class="inv-category-title">Consumíveis</h3>
+                        {% if c.player == user %}
+                        <a href="{% url 'consumable_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar</a>
+                        {% endif %}
+                    </div>
+                    {% if consumables %}
+                    <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr>
+                            <th>Nome</th><th>Efeito</th><th>Peso</th><th>Qtd</th>
+                            {% if c.player == user %}<th></th>{% endif %}
+                        </tr></thead>
+                        <tbody>
+                            {% for con in consumables %}
+                            <tr>
+                                <td>{{ con.name }}{% if con.is_nl %} <span class="nl-badge">NL</span>{% endif %}</td>
+                                <td class="inv-effect">{{ con.effect }}</td>
+                                <td class="inv-num">{{ con.weight }}</td>
+                                <td class="inv-num">{{ con.quantity }}</td>
+                                {% if c.player == user %}
+                                <td class="inv-actions">
+                                    <a href="{% url 'consumable_edit' pk=c.pk item_pk=con.pk %}" class="inv-btn-edit">Editar</a>
+                                    <form method="post" action="{% url 'consumable_delete' pk=c.pk item_pk=con.pk %}" class="inv-delete-form">
+                                        {% csrf_token %}<button type="submit" class="inv-btn-delete">✕</button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% if con.is_nl %}
+                            <tr class="nl-imprint-row">
+                                <td colspan="{% if c.player == user %}5{% else %}4{% endif %}">
+                                    <details class="nl-imprint-details">
+                                        <summary class="nl-imprint-summary">Imprint NL — {{ con.name }}</summary>
+                                        <div class="nl-imprint-body">
+                                            {% if con.nl_constant %}<p><strong>Continuity Constant:</strong> {{ con.nl_constant }}</p>{% endif %}
+                                            {% if con.nl_passive %}<p><strong>Passive Expressions:</strong> {{ con.nl_passive }}</p>{% endif %}
+                                            {% if con.nl_active %}<p><strong>Active Expressions:</strong> {{ con.nl_active }}</p>{% endif %}
+                                            {% if con.nl_condition_rules %}<p><strong>Condition Rules:</strong> {{ con.nl_condition_rules }}</p>{% endif %}
+                                        </div>
+                                    </details>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                    {% else %}
+                    <p class="inv-empty">Nenhum consumível cadastrado.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </details>
+
+    {# ============================================================ #}
+    {# --- VEÍCULOS                                                 #}
+    {# ============================================================ #}
+    <details class="sheet-collapse">
+        <summary class="sheet-collapse-summary">
+            <span>Veículos</span>
+            <span class="sheet-collapse-chevron">▶</span>
+        </summary>
+        <div class="sheet-collapse-body">
+            <section class="sheet-section">
+                <div class="inv-category-header">
+                    <h3 class="inv-category-title" style="margin:0"></h3>
+                    {% if c.player == user %}
+                    <a href="{% url 'vehicle_add' pk=c.pk %}" class="btn btn-inv-add btn-sm">+ Adicionar Veículo</a>
+                    {% endif %}
+                </div>
+
+                {% if vehicles %}
+                {% for veh in vehicles %}
+                <div class="veh-card veh-state-{{ veh.damage_state }}">
+                    <div class="veh-card-header">
+                        <span class="veh-name">{{ veh.name }}</span>
+                        <span class="veh-size-badge">{{ veh.get_size_tier_display }}</span>
+                        {% if veh.is_nl %}<span class="nl-badge">NL</span>{% endif %}
+                        {% if c.player == user %}
+                        <span class="veh-card-actions">
+                            <a href="{% url 'vehicle_edit' pk=c.pk item_pk=veh.pk %}" class="inv-btn-edit">Editar</a>
+                            <form method="post" action="{% url 'vehicle_delete' pk=c.pk item_pk=veh.pk %}" class="inv-delete-form">
+                                {% csrf_token %}<button type="submit" class="inv-btn-delete">✕</button>
+                            </form>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="veh-stats-row">
+                        <span class="veh-stat"><span class="veh-stat-label">AV</span> {{ veh.armor_value }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">Speed</span> {{ veh.speed }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">Handling</span> {{ veh.handling }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">Assentos</span> {{ veh.seats }}</span>
+                        <span class="veh-stat"><span class="veh-stat-label">Cargo</span> {{ veh.cargo_slots }}</span>
+                        {% if veh.fuel_type %}<span class="veh-stat"><span class="veh-stat-label">Comb.</span> {{ veh.fuel_type }}</span>{% endif %}
+                        {% if veh.fuel_range %}<span class="veh-stat"><span class="veh-stat-label">Alcance</span> {{ veh.fuel_range }}</span>{% endif %}
+                    </div>
+
+                    <div class="veh-hp-row">
+                        <span class="veh-hp-label">HP</span>
+                        <span class="veh-hp-current">{{ veh.current_hp }}</span>
+                        <span class="veh-hp-sep">/</span>
+                        <span class="veh-hp-max">{{ veh.max_hp }}</span>
+                        <div class="veh-hp-bar-wrap">
+                            <div class="veh-hp-bar" style="width: {% widthratio veh.current_hp veh.max_hp 100 %}%"></div>
+                        </div>
+                        {% if veh.damage_state == 'damaged' %}
+                        <span class="veh-state-label veh-state-damaged">Danificado (Speed−1, Handling−1)</span>
+                        {% elif veh.damage_state == 'critical' %}
+                        <span class="veh-state-label veh-state-critical">Crítico (Speed×½, Handling−2)</span>
+                        {% elif veh.damage_state == 'disabled' %}
+                        <span class="veh-state-label veh-state-disabled">Desativado</span>
+                        {% endif %}
+                    </div>
+
+                    {% if c.player == user %}
+                    <div class="veh-hp-controls">
+                        <form method="post" action="{% url 'vehicle_hp_update' pk=c.pk item_pk=veh.pk %}" class="veh-hp-form">
+                            {% csrf_token %}
+                            <input type="number" name="amount" class="ct-input veh-hp-input" value="1" min="1">
+                            <button type="submit" name="action" value="damage" class="ct-btn ct-btn-damage">Dano</button>
+                            <button type="submit" name="action" value="heal" class="ct-btn ct-btn-heal">Curar</button>
+                            <button type="submit" name="action" value="full_heal" class="ct-btn ct-btn-full">Full</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {% if veh.traits %}
+                    <div class="veh-traits"><strong>Traits:</strong> {{ veh.traits }}</div>
+                    {% endif %}
+
+                    {% if veh.is_nl %}
+                    <details class="nl-imprint-details veh-nl-details">
+                        <summary class="nl-imprint-summary">Imprint NL</summary>
+                        <div class="nl-imprint-body">
+                            {% if veh.nl_constant %}<p><strong>Continuity Constant:</strong> {{ veh.nl_constant }}</p>{% endif %}
+                            {% if veh.nl_passive %}<p><strong>Passive Expressions:</strong> {{ veh.nl_passive }}</p>{% endif %}
+                            {% if veh.nl_active %}<p><strong>Active Expressions:</strong> {{ veh.nl_active }}</p>{% endif %}
+                            {% if veh.nl_condition_rules %}<p><strong>Condition Rules:</strong> {{ veh.nl_condition_rules }}</p>{% endif %}
+                        </div>
+                    </details>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="inv-empty">Nenhum veículo cadastrado.</p>
+                {% endif %}
+            </section>
+        </div>
+    </details>
+
+    {# ============================================================ #}
+    {# --- NOTAS                                                    #}
+    {# ============================================================ #}
     {% if c.notes %}
-    <section class="sheet-section">
-        <h2 class="section-title">Notas</h2>
-        <div class="notes-block">{{ c.notes|linebreaksbr }}</div>
-    </section>
+    <details class="sheet-collapse">
+        <summary class="sheet-collapse-summary">
+            <span>Notas</span>
+            <span class="sheet-collapse-chevron">▶</span>
+        </summary>
+        <div class="sheet-collapse-body">
+            <section class="sheet-section">
+                <div class="notes-block">{{ c.notes|linebreaksbr }}</div>
+            </section>
+        </div>
+    </details>
     {% endif %}
 
 </div>

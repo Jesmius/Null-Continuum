@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Construir Shift — {{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="sheet">
+
+    <div class="sheet-header">
+        <h1 class="sheet-name">{{ c.name }} — Construção do Shift</h1>
+        <p class="sheet-step-hint">Passo 5 de 5 — Defina as habilidades do seu Shift</p>
+    </div>
+
+    {% if errors %}
+    <div class="form-errors">
+        {% for e in errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="shift-form">
+        {% csrf_token %}
+
+        {# ── IDENTIDADE DO SHIFT ── #}
+        <section class="sheet-section shift-builder-section">
+            <h2 class="section-title nl-section-title">Identidade do Shift</h2>
+            <p class="shift-section-hint">Dê um nome ao seu Shift e defina o custo base para ativá-lo.</p>
+
+            <div class="shift-identity-grid">
+                <div class="shift-field shift-field--name">
+                    <label class="shift-label" for="shift_name">Nome do Shift</label>
+                    <input type="text" id="shift_name" name="shift_name"
+                           class="shift-input"
+                           placeholder="Ex.: Forma Vespertina, Silhueta Fraturada…"
+                           value="{{ existing_shift.name|default:'' }}" required>
+                </div>
+                <div class="shift-field">
+                    <label class="shift-label" for="transform_strain">Custo de Ativação (Strain)</label>
+                    <input type="number" id="transform_strain" name="transform_strain"
+                           class="shift-input shift-input--num"
+                           min="0" value="{{ existing_shift.transform_strain|default:0 }}">
+                </div>
+                <div class="shift-field">
+                    <label class="shift-label" for="transform_ap">Custo de Ativação (AP)</label>
+                    <input type="number" id="transform_ap" name="transform_ap"
+                           class="shift-input shift-input--num"
+                           min="0" value="{{ existing_shift.transform_ap|default:0 }}">
+                </div>
+            </div>
+        </section>
+
+        {# ── PASSIVAS ── #}
+        <section class="sheet-section shift-builder-section">
+            <h2 class="section-title nl-section-title">Habilidades Passivas</h2>
+            <p class="shift-section-hint">Efeitos que permanecem ativos enquanto o Shift estiver ativado. Preencha quantas slots precisar (as vazias são ignoradas).</p>
+
+            <div id="passives-container">
+                {% if existing_shift and existing_shift.passives.exists %}
+                    {% with n=existing_shift.passives.count %}
+                    {% for p in existing_shift.passives.all %}
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <textarea name="passive_desc_{{ forloop.counter0 }}"
+                                  class="shift-textarea" rows="2"
+                                  placeholder="Descreva a habilidade passiva…">{{ p.description }}</textarea>
+                    </div>
+                    {% endfor %}
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ n|add:1 }}</div>
+                        <textarea name="passive_desc_{{ n }}"
+                                  class="shift-textarea" rows="2" placeholder="Descreva a habilidade passiva…"></textarea>
+                    </div>
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ n|add:2 }}</div>
+                        <textarea name="passive_desc_{{ n|add:1 }}"
+                                  class="shift-textarea" rows="2" placeholder="Descreva a habilidade passiva…"></textarea>
+                    </div>
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ n|add:3 }}</div>
+                        <textarea name="passive_desc_{{ n|add:2 }}"
+                                  class="shift-textarea" rows="2" placeholder="Descreva a habilidade passiva…"></textarea>
+                    </div>
+                    {% endwith %}
+                {% else %}
+                    {% for i in "01234" %}
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <textarea name="passive_desc_{{ forloop.counter0 }}"
+                                  class="shift-textarea" rows="2"
+                                  placeholder="Descreva a habilidade passiva…"></textarea>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </section>
+
+        {# ── ATIVAS ── #}
+        <section class="sheet-section shift-builder-section">
+            <h2 class="section-title nl-section-title">Habilidades Ativas</h2>
+            <p class="shift-section-hint">Ações que o personagem pode executar enquanto transformado. Preencha quantas slots precisar (as vazias são ignoradas).</p>
+
+            <div id="actives-container">
+                {% if existing_shift and existing_shift.actives.exists %}
+                    {% with n=existing_shift.actives.count %}
+                    {% for a in existing_shift.actives.all %}
+                    <div class="shift-active-row">
+                        <div class="shift-active-header">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <input type="text" name="active_name_{{ forloop.counter0 }}"
+                                   class="shift-input shift-active-name"
+                                   placeholder="Nome da ativa…" value="{{ a.name }}">
+                        </div>
+                        <div class="shift-active-fields">
+                            <div class="shift-field">
+                                <label class="shift-label-sm">Dano / Efeito</label>
+                                <input type="text" name="active_effect_{{ forloop.counter0 }}"
+                                       class="shift-input" placeholder="Ex.: 2d6+INS, ou descreva o efeito…"
+                                       value="{{ a.damage_effect }}">
+                            </div>
+                            <div class="shift-field shift-field--sm">
+                                <label class="shift-label-sm">Range (hexes)</label>
+                                <input type="number" name="active_range_{{ forloop.counter0 }}"
+                                       class="shift-input shift-input--num" min="0" value="{{ a.range_hexes }}">
+                            </div>
+                            <div class="shift-field shift-field--sm">
+                                <label class="shift-label-sm">Custo (Strain)</label>
+                                <input type="number" name="active_strain_{{ forloop.counter0 }}"
+                                       class="shift-input shift-input--num" min="0" value="{{ a.strain_cost }}">
+                            </div>
+                            <div class="shift-field">
+                                <label class="shift-label-sm">Duração</label>
+                                <input type="text" name="active_duration_{{ forloop.counter0 }}"
+                                       class="shift-input" placeholder="Ex.: 1 turno, Instantâneo, Sustentado…"
+                                       value="{{ a.duration }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% for extra in "012" %}
+                    <div class="shift-active-row">
+                        <div class="shift-active-header">
+                            <div class="shift-row-num">{{ n|add:forloop.counter }}</div>
+                            <input type="text" name="active_name_{{ n|add:forloop.counter0 }}"
+                                   class="shift-input shift-active-name" placeholder="Nome da ativa…">
+                        </div>
+                        <div class="shift-active-fields">
+                            <div class="shift-field">
+                                <label class="shift-label-sm">Dano / Efeito</label>
+                                <input type="text" name="active_effect_{{ n|add:forloop.counter0 }}"
+                                       class="shift-input" placeholder="Ex.: 2d6+INS, ou descreva o efeito…">
+                            </div>
+                            <div class="shift-field shift-field--sm">
+                                <label class="shift-label-sm">Range (hexes)</label>
+                                <input type="number" name="active_range_{{ n|add:forloop.counter0 }}"
+                                       class="shift-input shift-input--num" min="0" value="1">
+                            </div>
+                            <div class="shift-field shift-field--sm">
+                                <label class="shift-label-sm">Custo (Strain)</label>
+                                <input type="number" name="active_strain_{{ n|add:forloop.counter0 }}"
+                                       class="shift-input shift-input--num" min="0" value="0">
+                            </div>
+                            <div class="shift-field">
+                                <label class="shift-label-sm">Duração</label>
+                                <input type="text" name="active_duration_{{ n|add:forloop.counter0 }}"
+                                       class="shift-input" placeholder="Ex.: 1 turno, Instantâneo, Sustentado…">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endwith %}
+                {% else %}
+                    {% for i in "01234" %}
+                    <div class="shift-active-row">
+                        <div class="shift-active-header">
+                            <div class="shift-row-num">{{ forloop.counter }}</div>
+                            <input type="text" name="active_name_{{ forloop.counter0 }}"
+                                   class="shift-input shift-active-name" placeholder="Nome da ativa…">
+                        </div>
+                        <div class="shift-active-fields">
+                            <div class="shift-field">
+                                <label class="shift-label-sm">Dano / Efeito</label>
+                                <input type="text" name="active_effect_{{ forloop.counter0 }}"
+                                       class="shift-input" placeholder="Ex.: 2d6+INS, ou descreva o efeito…">
+                            </div>
+                            <div class="shift-field shift-field--sm">
+                                <label class="shift-label-sm">Range (hexes)</label>
+                                <input type="number" name="active_range_{{ forloop.counter0 }}"
+                                       class="shift-input shift-input--num" min="0" value="1">
+                            </div>
+                            <div class="shift-field shift-field--sm">
+                                <label class="shift-label-sm">Custo (Strain)</label>
+                                <input type="number" name="active_strain_{{ forloop.counter0 }}"
+                                       class="shift-input shift-input--num" min="0" value="0">
+                            </div>
+                            <div class="shift-field">
+                                <label class="shift-label-sm">Duração</label>
+                                <input type="text" name="active_duration_{{ forloop.counter0 }}"
+                                       class="shift-input" placeholder="Ex.: 1 turno, Instantâneo, Sustentado…">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </section>
+
+        {# ── CUSTOS / DRAWBACKS ── #}
+        <section class="sheet-section shift-builder-section">
+            <h2 class="section-title nl-section-title">Custos &amp; Drawbacks</h2>
+            <p class="shift-section-hint">Consequências ou limitações de manter o Shift ativo. As slots vazias são ignoradas.</p>
+
+            <div id="costs-container">
+                {% if existing_shift and existing_shift.costs.exists %}
+                    {% with n=existing_shift.costs.count %}
+                    {% for cost in existing_shift.costs.all %}
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <textarea name="cost_desc_{{ forloop.counter0 }}"
+                                  class="shift-textarea" rows="2"
+                                  placeholder="Descreva o custo ou drawback…">{{ cost.description }}</textarea>
+                    </div>
+                    {% endfor %}
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ n|add:1 }}</div>
+                        <textarea name="cost_desc_{{ n }}" class="shift-textarea" rows="2"
+                                  placeholder="Descreva o custo ou drawback…"></textarea>
+                    </div>
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ n|add:2 }}</div>
+                        <textarea name="cost_desc_{{ n|add:1 }}" class="shift-textarea" rows="2"
+                                  placeholder="Descreva o custo ou drawback…"></textarea>
+                    </div>
+                    {% endwith %}
+                {% else %}
+                    {% for i in "0123" %}
+                    <div class="shift-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <textarea name="cost_desc_{{ forloop.counter0 }}"
+                                  class="shift-textarea" rows="2"
+                                  placeholder="Descreva o custo ou drawback…"></textarea>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </section>
+
+        <div class="sheet-section shift-builder-actions">
+            <button type="submit" class="btn btn-primary">Salvar Shift e Finalizar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

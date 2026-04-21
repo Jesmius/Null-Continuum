@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Construir Schematics — {{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="sheet">
+
+    <div class="sheet-header">
+        <h1 class="sheet-name">{{ c.name }} — Schematics do Maker</h1>
+        <p class="sheet-step-hint">Passo 5 de 5 — Construa seus Schematics (comece com 2, o terceiro é opcional)</p>
+    </div>
+
+    {% if errors %}
+    <div class="form-errors">
+        {% for e in errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="maker-form">
+        {% csrf_token %}
+
+        <div id="schematics-container">
+            {% if existing_schematics %}
+                {% for s in existing_schematics %}
+                <div class="maker-schematic-form">
+                    {% include 'CharSheet/_maker_schematic_form.html' with s=s idx=forloop.counter0 %}
+                </div>
+                {% endfor %}
+                {# One extra empty slot for adding a new schematic #}
+                {% with n=existing_schematics|length %}
+                <div class="maker-schematic-form">
+                    {% include 'CharSheet/_maker_schematic_form.html' with s=None idx=n %}
+                </div>
+                {% endwith %}
+            {% else %}
+                {# Fresh creation: 3 schematic slots (first 2 required, 3rd optional) #}
+                <div class="maker-schematic-form">
+                    {% include 'CharSheet/_maker_schematic_form.html' with s=None idx=0 %}
+                </div>
+                <div class="maker-schematic-form">
+                    {% include 'CharSheet/_maker_schematic_form.html' with s=None idx=1 %}
+                </div>
+                <div class="maker-schematic-form">
+                    {% include 'CharSheet/_maker_schematic_form.html' with s=None idx=2 %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="sheet-section shift-builder-actions">
+            <button type="submit" class="btn btn-primary">Salvar Schematics e Finalizar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

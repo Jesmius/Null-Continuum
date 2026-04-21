@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Configurar Leak — {{ c.name }} — Null Continuum{% endblock %}
+
+{% block content %}
+<div class="sheet">
+
+    <div class="sheet-header">
+        <h1 class="sheet-name">{{ c.name }} — Leak do Leaker</h1>
+        <p class="sheet-step-hint">Passo 5 de 5 — Configure suas Emissions, Volatility e Bleeds</p>
+    </div>
+
+    {% if errors %}
+    <div class="form-errors">
+        {% for e in errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="leaker-form">
+        {% csrf_token %}
+
+        {# ── EMISSIONS ── #}
+        <div class="shift-builder-section">
+            <h2 class="shift-builder-title">Emissions <span class="shift-builder-subtitle">(habilidades sempre ativas do Leak)</span></h2>
+            <p class="shift-section-hint">As slots vazias são ignoradas ao salvar.</p>
+            <div class="leaker-emission-header leaker-row-header">
+                <span class="leaker-col-name">Nome</span>
+                <span class="leaker-col-radius">Raio (hex)</span>
+                <span class="leaker-col-desc">Descrição / Efeito</span>
+            </div>
+            <div id="emissions-container">
+                {% if existing_emissions %}
+                    {% with n=existing_emissions|length %}
+                    {% for e in existing_emissions %}
+                    <div class="shift-row leaker-emission-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <div class="leaker-emission-fields">
+                            <input type="text" name="emission_name_{{ forloop.counter0 }}" class="shift-input leaker-col-name"
+                                   placeholder="Ex.: Aura de Disrupção…" value="{{ e.name }}">
+                            <input type="number" name="emission_radius_{{ forloop.counter0 }}" class="shift-input shift-input--num leaker-col-radius"
+                                   min="0" max="10" placeholder="—"
+                                   {% if e.radius is not None %}value="{{ e.radius }}"{% endif %}>
+                            <textarea name="emission_desc_{{ forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                      placeholder="Descrição do efeito…">{{ e.description }}</textarea>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% for extra in "012" %}
+                    <div class="shift-row leaker-emission-row">
+                        <div class="shift-row-num">{{ n|add:forloop.counter }}</div>
+                        <div class="leaker-emission-fields">
+                            <input type="text" name="emission_name_{{ n|add:forloop.counter0 }}" class="shift-input leaker-col-name"
+                                   placeholder="Ex.: Aura de Disrupção…">
+                            <input type="number" name="emission_radius_{{ n|add:forloop.counter0 }}" class="shift-input shift-input--num leaker-col-radius"
+                                   min="0" max="10" placeholder="—">
+                            <textarea name="emission_desc_{{ n|add:forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                      placeholder="Descrição do efeito…"></textarea>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endwith %}
+                {% else %}
+                    {% for i in "0123" %}
+                    <div class="shift-row leaker-emission-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <div class="leaker-emission-fields">
+                            <input type="text" name="emission_name_{{ forloop.counter0 }}" class="shift-input leaker-col-name"
+                                   placeholder="Ex.: Aura de Disrupção…">
+                            <input type="number" name="emission_radius_{{ forloop.counter0 }}" class="shift-input shift-input--num leaker-col-radius"
+                                   min="0" max="10" placeholder="—">
+                            <textarea name="emission_desc_{{ forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                      placeholder="Descrição do efeito…"></textarea>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── VOLATILITY STAGES ── #}
+        <div class="shift-builder-section">
+            <h2 class="shift-builder-title">Volatility <span class="shift-builder-subtitle">(upgrades por nível de Overstrain)</span></h2>
+            <div id="volatility-container">
+                {% if existing_volatility %}
+                    {% for v in existing_volatility %}
+                    <div class="shift-row leaker-vol-row">
+                        <input type="text" name="vol_label_{{ forloop.counter0 }}" class="shift-input leaker-vol-label-input"
+                               placeholder="Ex.: OT I" value="{{ v.stage_label }}">
+                        <textarea name="vol_desc_{{ forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                  placeholder="Descreva os upgrades de Emission e Bleed neste estágio…">{{ v.description }}</textarea>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    {% for label in default_vol_labels %}
+                    <div class="shift-row leaker-vol-row">
+                        <input type="text" name="vol_label_{{ forloop.counter0 }}" class="shift-input leaker-vol-label-input"
+                               placeholder="Ex.: OT I" value="{{ label }}">
+                        <textarea name="vol_desc_{{ forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                  placeholder="Descreva os upgrades de Emission e Bleed neste estágio…"></textarea>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── BLEEDS ── #}
+        <div class="shift-builder-section">
+            <h2 class="shift-builder-title">Bleeds <span class="shift-builder-subtitle">(habilidades ativas — Leak focado)</span></h2>
+            <p class="shift-section-hint">As slots vazias são ignoradas ao salvar.</p>
+            <div class="leaker-bleed-header leaker-row-header">
+                <span class="leaker-col-bname">Nome</span>
+                <span class="leaker-col-effect">Dano / Efeito</span>
+                <span class="leaker-col-ap">AP</span>
+                <span class="leaker-col-strain">Strain</span>
+                <span class="leaker-col-desc">Notas</span>
+            </div>
+            <div id="bleeds-container">
+                {% if existing_bleeds %}
+                    {% with n=existing_bleeds|length %}
+                    {% for b in existing_bleeds %}
+                    <div class="shift-row leaker-bleed-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <div class="leaker-bleed-fields">
+                            <input type="text" name="bleed_name_{{ forloop.counter0 }}" class="shift-input leaker-col-bname"
+                                   placeholder="Nome do Bleed…" value="{{ b.name }}">
+                            <input type="text" name="bleed_effect_{{ forloop.counter0 }}" class="shift-input leaker-col-effect"
+                                   placeholder="Ex.: 2d6 NL, empurra 2 hexes…" value="{{ b.effect }}">
+                            <input type="number" name="bleed_ap_{{ forloop.counter0 }}" class="shift-input shift-input--num leaker-col-ap"
+                                   min="1" max="3" value="{{ b.ap_cost }}">
+                            <input type="text" name="bleed_strain_{{ forloop.counter0 }}" class="shift-input leaker-col-strain"
+                                   placeholder="Ex.: Auto banda OT I…" value="{{ b.strain_info }}">
+                            <textarea name="bleed_desc_{{ forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                      placeholder="Notas adicionais…">{{ b.description }}</textarea>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% for extra in "012" %}
+                    <div class="shift-row leaker-bleed-row">
+                        <div class="shift-row-num">{{ n|add:forloop.counter }}</div>
+                        <div class="leaker-bleed-fields">
+                            <input type="text" name="bleed_name_{{ n|add:forloop.counter0 }}" class="shift-input leaker-col-bname"
+                                   placeholder="Nome do Bleed…">
+                            <input type="text" name="bleed_effect_{{ n|add:forloop.counter0 }}" class="shift-input leaker-col-effect"
+                                   placeholder="Ex.: 2d6 NL, empurra 2 hexes…">
+                            <input type="number" name="bleed_ap_{{ n|add:forloop.counter0 }}" class="shift-input shift-input--num leaker-col-ap"
+                                   min="1" max="3" value="1">
+                            <input type="text" name="bleed_strain_{{ n|add:forloop.counter0 }}" class="shift-input leaker-col-strain"
+                                   placeholder="Ex.: Auto banda OT I…">
+                            <textarea name="bleed_desc_{{ n|add:forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                      placeholder="Notas adicionais…"></textarea>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endwith %}
+                {% else %}
+                    {% for i in "0123" %}
+                    <div class="shift-row leaker-bleed-row">
+                        <div class="shift-row-num">{{ forloop.counter }}</div>
+                        <div class="leaker-bleed-fields">
+                            <input type="text" name="bleed_name_{{ forloop.counter0 }}" class="shift-input leaker-col-bname"
+                                   placeholder="Nome do Bleed…">
+                            <input type="text" name="bleed_effect_{{ forloop.counter0 }}" class="shift-input leaker-col-effect"
+                                   placeholder="Ex.: 2d6 NL, empurra 2 hexes…">
+                            <input type="number" name="bleed_ap_{{ forloop.counter0 }}" class="shift-input shift-input--num leaker-col-ap"
+                                   min="1" max="3" value="1">
+                            <input type="text" name="bleed_strain_{{ forloop.counter0 }}" class="shift-input leaker-col-strain"
+                                   placeholder="Ex.: Auto banda OT I…">
+                            <textarea name="bleed_desc_{{ forloop.counter0 }}" class="shift-textarea leaker-col-desc" rows="2"
+                                      placeholder="Notas adicionais…"></textarea>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sheet-section shift-builder-actions">
+            <button type="submit" class="btn btn-primary">Salvar Leak e Finalizar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

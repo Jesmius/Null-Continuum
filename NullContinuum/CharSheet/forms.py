@@ -1,10 +1,31 @@
 from django import forms
-from .models import Character, WeaponItem, VestmentItem, ConsumableItem
+from .models import Character, WeaponItem, VestmentItem, ConsumableItem, VehicleItem
+
+_NL_FIELD_NAMES = ['is_nl', 'nl_constant', 'nl_passive', 'nl_active', 'nl_condition_rules']
+
+_INV_TEXT = {'class': 'form-input'}
+_INV_NUM  = {'class': 'form-input', 'min': 0}
+_INV_NUM1 = {'class': 'form-input', 'min': 1}
+
+_NL_WIDGETS = {
+    'nl_constant':        forms.TextInput(attrs={**_INV_TEXT, 'placeholder': 'Ex.: CC-M, CC-T…'}),
+    'nl_passive':         forms.Textarea(attrs={**_INV_TEXT, 'rows': 2, 'placeholder': 'Efeitos passivos NL…'}),
+    'nl_active':          forms.Textarea(attrs={**_INV_TEXT, 'rows': 2, 'placeholder': 'Efeitos ativos NL…'}),
+    'nl_condition_rules': forms.Textarea(attrs={**_INV_TEXT, 'rows': 2, 'placeholder': 'Regras de condição NL…'}),
+}
+
+
+class _NLFieldsMixin:
+    def nl_fields(self):
+        return [self[n] for n in _NL_FIELD_NAMES]
+
+    def regular_fields(self):
+        nl = set(_NL_FIELD_NAMES)
+        return [f for f in self if f.name not in nl]
 
 
 class CharacterIdentityForm(forms.ModelForm):
-    """Formulário para identidade + atributos + perfil NL.
-    HP atual e Temp HP ficam no combat tracker, não aqui."""
+    """Formulário para identidade + atributos + perfil NL."""
 
     class Meta:
         model = Character
@@ -56,15 +77,14 @@ class CharacterSkillsForm(forms.ModelForm):
             )
 
 
-_INV_TEXT = {'class': 'form-input'}
-_INV_NUM  = {'class': 'form-input', 'min': 0}
-_INV_NUM1 = {'class': 'form-input', 'min': 1}
-
-
-class WeaponItemForm(forms.ModelForm):
+class WeaponItemForm(_NLFieldsMixin, forms.ModelForm):
     class Meta:
         model = WeaponItem
-        fields = ['name', 'weight', 'quantity', 'damage', 'hit_bonus', 'crit_range', 'crit_multiplier', 'range_hexes', 'ammo']
+        fields = [
+            'name', 'weight', 'quantity', 'damage', 'hit_bonus',
+            'crit_range', 'crit_multiplier', 'range_hexes', 'ammo',
+            *_NL_FIELD_NAMES,
+        ]
         widgets = {
             'name':            forms.TextInput(attrs=_INV_TEXT),
             'weight':          forms.NumberInput(attrs=_INV_NUM1),
@@ -73,15 +93,19 @@ class WeaponItemForm(forms.ModelForm):
             'hit_bonus':       forms.NumberInput(attrs=_INV_NUM),
             'crit_range':      forms.NumberInput(attrs={**_INV_NUM1, 'max': 20}),
             'crit_multiplier': forms.NumberInput(attrs={**_INV_NUM1, 'max': 10}),
-            'range_hexes':     forms.NumberInput(attrs={**_INV_NUM1}),
+            'range_hexes':     forms.NumberInput(attrs=_INV_NUM1),
             'ammo':            forms.NumberInput(attrs={**_INV_NUM, 'placeholder': 'Vazio = corpo-a-corpo'}),
+            **_NL_WIDGETS,
         }
 
 
-class VestmentItemForm(forms.ModelForm):
+class VestmentItemForm(_NLFieldsMixin, forms.ModelForm):
     class Meta:
         model = VestmentItem
-        fields = ['name', 'weight', 'quantity', 'pd_bonus', 'rd', 'block_bonus', 'agi_penalty']
+        fields = [
+            'name', 'weight', 'quantity', 'pd_bonus', 'rd', 'block_bonus', 'agi_penalty',
+            *_NL_FIELD_NAMES,
+        ]
         widgets = {
             'name':        forms.TextInput(attrs=_INV_TEXT),
             'weight':      forms.NumberInput(attrs=_INV_NUM1),
@@ -90,16 +114,46 @@ class VestmentItemForm(forms.ModelForm):
             'rd':          forms.NumberInput(attrs=_INV_NUM),
             'block_bonus': forms.NumberInput(attrs=_INV_NUM),
             'agi_penalty': forms.NumberInput(attrs=_INV_NUM),
+            **_NL_WIDGETS,
         }
 
 
-class ConsumableItemForm(forms.ModelForm):
+class ConsumableItemForm(_NLFieldsMixin, forms.ModelForm):
     class Meta:
         model = ConsumableItem
-        fields = ['name', 'weight', 'quantity', 'effect']
+        fields = ['name', 'weight', 'quantity', 'effect', *_NL_FIELD_NAMES]
         widgets = {
             'name':     forms.TextInput(attrs=_INV_TEXT),
             'weight':   forms.NumberInput(attrs=_INV_NUM1),
             'quantity': forms.NumberInput(attrs=_INV_NUM1),
             'effect':   forms.Textarea(attrs={**_INV_TEXT, 'rows': 2}),
+            **_NL_WIDGETS,
+        }
+
+
+class VehicleItemForm(_NLFieldsMixin, forms.ModelForm):
+    class Meta:
+        model = VehicleItem
+        fields = [
+            'name', 'size_tier', 'max_hp', 'current_hp',
+            'armor_value', 'speed', 'handling', 'seats', 'cargo_slots',
+            'fuel_type', 'fuel_range', 'traits',
+            *_NL_FIELD_NAMES,
+        ]
+        widgets = {
+            'name':       forms.TextInput(attrs=_INV_TEXT),
+            'size_tier':  forms.Select(attrs=_INV_TEXT),
+            'max_hp':     forms.NumberInput(attrs=_INV_NUM1),
+            'current_hp': forms.NumberInput(attrs=_INV_NUM),
+            'armor_value':  forms.NumberInput(attrs=_INV_NUM),
+            'speed':        forms.NumberInput(attrs=_INV_NUM),
+            'handling':     forms.NumberInput(attrs=_INV_NUM),
+            'seats':        forms.NumberInput(attrs=_INV_NUM1),
+            'cargo_slots':  forms.NumberInput(attrs=_INV_NUM),
+            'fuel_type':    forms.TextInput(attrs={**_INV_TEXT,
+                            'placeholder': 'Ex.: Gasolina, Elétrico, Null-Cell…'}),
+            'fuel_range':   forms.TextInput(attrs={**_INV_TEXT,
+                            'placeholder': 'Ex.: 400 km, 8 horas…'}),
+            'traits':       forms.Textarea(attrs={**_INV_TEXT, 'rows': 2}),
+            **_NL_WIDGETS,
         }

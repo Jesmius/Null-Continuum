@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Veículo — {{ char.name }}{% endblock %}
+
+{% block content %}
+<div class="auth-container inv-form-container">
+    <h1 class="auth-title">{{ action }} Veículo</h1>
+    <p class="inv-form-char">Personagem: <strong>{{ char.name }}</strong></p>
+
+    <form method="post" class="inv-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% for error in form.name.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="veh-form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.size_tier.id_for_label }}">{{ form.size_tier.label }}</label>
+                {{ form.size_tier }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.armor_value.id_for_label }}">{{ form.armor_value.label }}</label>
+                {{ form.armor_value }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.speed.id_for_label }}">{{ form.speed.label }}</label>
+                {{ form.speed }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.handling.id_for_label }}">{{ form.handling.label }}</label>
+                {{ form.handling }}
+            </div>
+        </div>
+
+        <div class="veh-form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.max_hp.id_for_label }}">{{ form.max_hp.label }}</label>
+                {{ form.max_hp }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.current_hp.id_for_label }}">{{ form.current_hp.label }}</label>
+                {{ form.current_hp }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.seats.id_for_label }}">{{ form.seats.label }}</label>
+                {{ form.seats }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.cargo_slots.id_for_label }}">{{ form.cargo_slots.label }}</label>
+                {{ form.cargo_slots }}
+            </div>
+        </div>
+
+        <div class="veh-form-row">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.fuel_type.id_for_label }}">{{ form.fuel_type.label }}</label>
+                {{ form.fuel_type }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.fuel_range.id_for_label }}">{{ form.fuel_range.label }}</label>
+                {{ form.fuel_range }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.traits.id_for_label }}">{{ form.traits.label }}</label>
+            {{ form.traits }}
+        </div>
+
+        <details class="nl-form-details" {% if form.instance.is_nl %}open{% endif %}>
+            <summary class="nl-form-summary">Imprint Não-Linear</summary>
+            <div class="nl-form-body">
+                {% for field in form.nl_fields %}
+                <div class="form-group">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </details>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-inline">{{ action }}</button>
+            <a href="{% url 'character_detail' pk=char.pk %}" class="btn btn-secondary btn-inline">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

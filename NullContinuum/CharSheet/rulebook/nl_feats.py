@@ -1,5 +1,5 @@
 """
-Feats Não-Lineares do Null Continuum v0.7 — §64-§68.
+Feats Não-Lineares do Null Continuum.
 
 Formato das trees:
   (tree_name, tree_code, tree_description, nl_frame, [(code, name, tier, description), ...])
@@ -11,7 +11,7 @@ Para mudar: edite aqui e rode `python manage.py sync_rulebook`
 """
 
 # ─────────────────────────────────────────────
-#  §64. GENERAL NL FEATS — Category I
+#  GENERAL NL FEATS — Category I
 # ─────────────────────────────────────────────
 
 NL_GENERAL_TREE = (
@@ -43,7 +43,7 @@ NL_GENERAL_TREE = (
 )
 
 # ─────────────────────────────────────────────
-#  §65. SHIFTER FEATS — Category I
+#  SHIFTER FEATS — Category I
 # ─────────────────────────────────────────────
 
 SHIFTER_TREES = [
@@ -76,7 +76,7 @@ SHIFTER_TREES = [
 ]
 
 # ─────────────────────────────────────────────
-#  §66. ANCHOR FEATS — Category I
+#  ANCHOR (CHANGER) FEATS — Category I
 # ─────────────────────────────────────────────
 
 CHANGER_TREES = [
@@ -109,7 +109,7 @@ CHANGER_TREES = [
 ]
 
 # ─────────────────────────────────────────────
-#  §67. MAKER FEATS — Category I
+#  MAKER FEATS — Category I
 # ─────────────────────────────────────────────
 
 MAKER_TREES = [
@@ -142,7 +142,7 @@ MAKER_TREES = [
 ]
 
 # ─────────────────────────────────────────────
-#  §68. LEAKER FEATS — Category I
+#  LEAKER FEATS — Category I
 # ─────────────────────────────────────────────
 
 LEAKER_TREES = [

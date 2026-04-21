@@ -9,7 +9,7 @@
 
     <form method="post" class="inv-form">
         {% csrf_token %}
-        {% for field in form %}
+        {% for field in form.regular_fields %}
         <div class="form-group">
             <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
             {{ field }}
@@ -21,6 +21,25 @@
             {% endfor %}
         </div>
         {% endfor %}
+
+        <details class="nl-form-details" {% if form.instance.is_nl %}open{% endif %}>
+            <summary class="nl-form-summary">Imprint Não-Linear</summary>
+            <div class="nl-form-body">
+                {% for field in form.nl_fields %}
+                <div class="form-group">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <span class="form-hint">{{ field.help_text }}</span>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </details>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-inline">{{ action }}</button>
             <a href="{% url 'character_detail' pk=char.pk %}" class="btn btn-secondary btn-inline">Cancelar</a>
