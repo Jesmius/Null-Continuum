@@ -23,6 +23,7 @@ BACKGROUND_CHOICES = [
     ('GUNSLINGER', 'Frontier Gunslinger'),
     ('SWORDSMAN', 'Wandering Swordsman'),
     ('ION_RESEARCHER', 'ION Researcher'),
+    ('MARSHAL', "Marshal of the Republic"),
     ('FIELD_MEDIC', 'Field Medic'),
     ('STREET_OPERATOR', 'Street Operator'),
     ('NULL_SCAVENGER', 'Null-Born Scavenger'),

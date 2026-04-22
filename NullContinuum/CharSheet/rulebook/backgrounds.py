@@ -42,6 +42,15 @@ BACKGROUND_DATA = {
         'choice_skills': [['skill_history', 'skill_investigation']],
         'expert_skill': None,
     },
+
+    'MARSHAL': {
+        'name': 'Marshal of the Republic',
+        'attribute_choices': ['presence', 'insight'],
+        'auto_skills': ['skill_intimidation', 'skill_persuasion'],
+        'choice_skills': [['skill_history', 'skill_investigation']],
+        'expert_skill': None,
+    },
+
     'EXECUTIONER': {
         'name': 'Executioner of the Republic',
         'attribute_choices': ['insight', 'presence'],

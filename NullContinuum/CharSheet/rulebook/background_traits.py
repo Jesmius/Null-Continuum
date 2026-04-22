@@ -25,6 +25,10 @@ BACKGROUND_TRAITS = {
         ('Voice of the People',
          'When addressing a group of three or more people during a social encounter, gain +2 on the check. If the group shares a common grievance you have identified, the bonus increases to +1 die instead.'),
     ],
+    'MARSHAL': [
+        ('Read the Structure',
+         'When you observe a community, organization, or group for at least 10 minutes, you may make an INS + Investigation or INS + Intuition check DC 14. On success, the GM tells you one of the following: who actually makes decisions (regardless of titles), what resource the group is most desperate for, or what internal tension is closest to breaking.'),
+    ],
     'EXECUTIONER': [
         ('Weight of Judgment',
          'Once per scene, when you deliver a threat or ultimatum to a single NPC, that NPC must make a PRE Save vs DC 10 + your PRE + Intimidation bonus. On failure, their Disposition toward you drops by 1 but they comply with one immediate demand. On success, they are unaffected and your approach is noted.'),
