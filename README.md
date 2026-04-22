@@ -13,6 +13,7 @@ Matrícula: 2210601
 # O que não foi desenvolvido:
     - A gerência de usuários não foi feita completamente, não consegui implementar a tempo o sistema de recuperação de senha que foi visto durante as aulas.
     - Na ideia inicial, os Game Masters teriam um "Initiative Tracker", onde eles poderiam gerenciar a ordem que os jogadores e os diversos inimigos iriam agir durante o combate, porém, o escopo da criação dos personagens foi maior do que o esperado, e não consegui implementar esse sistema a tempo.
+    
 
 # O que Funciona:
     - A criação de personagens funciona por completo, incluindo distribuição de atributos, seleção de skills, background, traits, feats de combate e de operações, e feats não-lineares.
@@ -24,8 +25,9 @@ Matrícula: 2210601
 # O que não Funciona:
     - Caso dê algum erro durante a criação de certos formulários na criação de personagem (não escolheu o número certo de skills, ou não usou todos os pontos de atributo por exemplo), certos campos do Form devem ser colocados de novo (principalmente as skills)
     - GMs não são capazes de editar TODOS os aspectos da ficha dos personagens
-
-
+    - Idealmente cada bacground teria uma lista de Skills pré-definida, porém eu mudei isso pois estava muito complexo de implementar, porém, os Backgrounds ainda tem essa lista definida internamente no arquivo.py
+    - É possível "quebrar" a ficha com muito rank ups, porém como eles são definidos pelo GM, não acho que isso é um grande problema
+    
 
 # Manual do Usuário:
 
